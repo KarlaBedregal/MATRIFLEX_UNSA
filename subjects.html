@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatriFlex UNSA - Gestión de Materias</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar dark">
+            <div class="sidebar-header">
+                <div class="logo-small">
+                    <i class="fas fa-book"></i>
+                </div>
+                <span>MatriFlex UNSA</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">Horario</a>
+                <a href="preferences.html">Preferencias</a>
+                <a href="academic-history.html">Historial Académico</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1>Gestión de Materias</h1>
+                <div class="header-actions">
+                    <button class="btn-secondary">Seleccionar</button>
+                    <button class="btn-link" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <!-- Subjects Section -->
+            <div class="subjects-section">
+                <h2>Materias Sugeridas</h2>
+                
+                <div class="subjects-table">
+                    <div class="table-header">
+                        <div class="col-checkbox"></div>
+                        <div class="col-name">Nombre</div>
+                        <div class="col-code">Código</div>
+                        <div class="col-credits">Créditos</div>
+                        <div class="col-prerequisites">Prerrequisitos</div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="col-checkbox">
+                            <input type="checkbox" id="algebra">
+                        </div>
+                        <div class="col-name">Álgebra</div>
+                        <div class="col-code">AE010</div>
+                        <div class="col-credits">3</div>
+                        <div class="col-prerequisites">Álgebra</div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="col-checkbox">
+                            <input type="checkbox" id="fisica">
+                        </div>
+                        <div class="col-name">Física I</div>
+                        <div class="col-code">FS101</div>
+                        <div class="col-credits">3</div>
+                        <div class="col-prerequisites"></div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="col-checkbox">
+                            <input type="checkbox" id="estructuras">
+                        </div>
+                        <div class="col-name">Estructuras Discretas</div>
+                        <div class="col-code">EC501</div>
+                        <div class="col-credits">3</div>
+                        <div class="col-prerequisites">Álgebra</div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="col-checkbox">
+                            <input type="checkbox" id="computacion">
+                        </div>
+                        <div class="col-name">Introducción a la Computación</div>
+                        <div class="col-code">AC001</div>
+                        <div class="col-credits">3</div>
+                        <div class="col-prerequisites"></div>
+                    </div>
+                    
+                    <div class="table-row">
+                        <div class="col-checkbox">
+                            <input type="checkbox" id="programacion">
+                        </div>
+                        <div class="col-name">Programación I</div>
+                        <div class="col-code">AB101</div>
+                        <div class="col-credits">3</div>
+                        <div class="col-prerequisites"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/subjects.js"></script>
+</body>
+</html>

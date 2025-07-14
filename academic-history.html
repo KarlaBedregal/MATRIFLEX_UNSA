@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatriFlex UNSA - Historial Académico</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar dark">
+            <div class="sidebar-header">
+                <div class="logo-small">
+                    <i class="fas fa-book"></i>
+                </div>
+                <span>MatriFlex UNSA</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html">Horario</a>
+                <a href="preferences.html">Preferencias</a>
+                <a href="academic-history.html" class="active">Historial Académico</a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1>Historial Académico</h1>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="exportHistory()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                    <button class="btn-link" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <!-- Student Summary -->
+            <div class="academic-summary">
+                <div class="summary-card">
+                    <div class="summary-item">
+                        <div class="summary-value">13.8</div>
+                        <div class="summary-label">Promedio General</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">48</div>
+                        <div class="summary-label">Créditos Aprobados</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">55%</div>
+                        <div class="summary-label">Progreso de Carrera</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">6</div>
+                        <div class="summary-label">Semestre Actual</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semester Tabs -->
+            <div class="semester-tabs">
+                <button class="tab-btn active" onclick="showSemester('all')">Todos</button>
+                <button class="tab-btn" onclick="showSemester('2024-1')">2024-I</button>
+                <button class="tab-btn" onclick="showSemester('2023-2')">2023-II</button>
+                <button class="tab-btn" onclick="showSemester('2023-1')">2023-I</button>
+                <button class="tab-btn" onclick="showSemester('2022-2')">2022-II</button>
+            </div>
+
+            <!-- Academic History Section -->
+            <div class="history-section">
+                <div class="history-filters">
+                    <div class="filter-group">
+                        <label>Buscar materia:</label>
+                        <input type="text" id="searchSubject" placeholder="Nombre o código de materia...">
+                    </div>
+                    <div class="filter-group">
+                        <label>Estado:</label>
+                        <select id="statusFilter">
+                            <option value="all">Todos</option>
+                            <option value="approved">Aprobado</option>
+                            <option value="failed">Reprobado</option>
+                            <option value="in-progress">En Curso</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="history-table">
+                    <div class="table-header">
+                        <div class="col-semester">Semestre</div>
+                        <div class="col-subject">Materia</div>
+                        <div class="col-code">Código</div>
+                        <div class="col-credits">Créditos</div>
+                        <div class="col-grade">Nota</div>
+                        <div class="col-status">Estado</div>
+                    </div>
+
+                    <!-- 2024-I Semester -->
+                    <div class="semester-group" data-semester="2024-1">
+                        <div class="semester-header">
+                            <h3>Semestre 2024-I</h3>
+                            <div class="semester-stats">
+                                <span>Promedio: 14</span>
+                                <span>Créditos: 13</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2024-I</div>
+                            <div class="col-subject">Cálculo Diferencial</div>
+                            <div class="col-code">MAT201</div>
+                            <div class="col-credits">4</div>
+                            <div class="col-grade">15.0</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2024-I</div>
+                            <div class="col-subject">Programación Orientada a Objetos</div>
+                            <div class="col-code">CS205</div>
+                            <div class="col-credits">4</div>
+                            <div class="col-grade">13.7</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2024-I</div>
+                            <div class="col-subject">Base de Datos I</div>
+                            <div class="col-code">CS210</div>
+                            <div class="col-credits">3</div>
+                            <div class="col-grade">15.9</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2024-I</div>
+                            <div class="col-subject">Inglés Técnico II</div>
+                            <div class="col-code">ENG102</div>
+                            <div class="col-credits">2</div>
+                            <div class="col-grade">16.5</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2023-II Semester -->
+                    <div class="semester-group" data-semester="2023-2">
+                        <div class="semester-header">
+                            <h3>Semestre 2023-II</h3>
+                            <div class="semester-stats">
+                                <span>Promedio: 15</span>
+                                <span>Créditos: 14</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-II</div>
+                            <div class="col-subject">Estructuras de Datos</div>
+                            <div class="col-code">CS203</div>
+                            <div class="col-credits">5</div>
+                            <div class="col-grade">16</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="failed">
+                            <div class="col-semester">2023-II</div>
+                            <div class="col-subject">Análisis de Algoritmos</div>
+                            <div class="col-code">CS204</div>
+                            <div class="col-credits">3</div>
+                            <div class="col-grade">10</div>
+                            <div class="col-status">
+                                <span class="status-badge failed">Reprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-II</div>
+                            <div class="col-subject">Sistemas Operativos</div>
+                            <div class="col-code">CS206</div>
+                            <div class="col-credits">4</div>
+                            <div class="col-grade">17</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-II</div>
+                            <div class="col-subject">Inglés Técnico I</div>
+                            <div class="col-code">ENG101</div>
+                            <div class="col-credits">2</div>
+                            <div class="col-grade">17</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2023-I Semester -->
+                    <div class="semester-group" data-semester="2023-1">
+                        <div class="semester-header">
+                            <h3>Semestre 2023-I</h3>
+                            <div class="semester-stats">
+                                <span>Promedio: 14</span>
+                                <span>Créditos: 16</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-I</div>
+                            <div class="col-subject">Programación II</div>
+                            <div class="col-code">CS202</div>
+                            <div class="col-credits">5</div>
+                            <div class="col-grade">12</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-I</div>
+                            <div class="col-subject">Matemáticas Discretas</div>
+                            <div class="col-code">MAT202</div>
+                            <div class="col-credits">5</div>
+                            <div class="col-grade">14</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-I</div>
+                            <div class="col-subject">Física II</div>
+                            <div class="col-code">PHY102</div>
+                            <div class="col-credits">4</div>
+                            <div class="col-grade">13</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row" data-status="approved">
+                            <div class="col-semester">2023-I</div>
+                            <div class="col-subject">Comunicación Técnica</div>
+                            <div class="col-code">COM101</div>
+                            <div class="col-credits">2</div>
+                            <div class="col-grade">14</div>
+                            <div class="col-status">
+                                <span class="status-badge approved">Aprobado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="statistics-section">
+                <h3>Estadísticas Académicas</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">15</div>
+                            <div class="stat-label">Materias Aprobadas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">1</div>
+                            <div class="stat-label">Materias Reprobadas</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">4.0</div>
+                            <div class="stat-label">Mejor Nota</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">6</div>
+                            <div class="stat-label">Semestres Cursados</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/academic-history.js"></script>
+</body>
+</html>

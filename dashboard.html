@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatriFlex UNSA - Dashboard</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="logo-small">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h1>MATRIFLEX UNSA</h1>
+            </div>
+            <div class="header-right">
+                <nav>
+                    <a href="dashboard.html">Inicio</a>
+                    <a href="#" onclick="showHelp()">Ayuda</a>
+                </nav>
+                <div class="user-menu">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="dashboard-content">
+            <!-- Student Info Card -->
+            <div class="student-card">
+                <h2>Estudiante</h2>
+                <h3>Julian Perez</h3>
+                <p class="cui">CUI</p>
+                
+                <div class="action-buttons">
+                    <a href="schedule-generator.html" class="action-btn">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Generar Horario</span>
+                    </a>
+                    <a href="preferences.html" class="action-btn">
+                        <i class="fas fa-cog"></i>
+                        <span>Editar Preferencias</span>
+                    </a>
+                    <a href="academic-history.html" class="action-btn">
+                        <i class="fas fa-history"></i>
+                        <span>Ver Historial Académico</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Subject Management -->
+            <div class="subjects-card">
+                <div class="subjects-header">
+                    <h2>Gestión de Materias</h2>
+                    <div class="subjects-tabs">
+                        <button class="tab-btn active" onclick="showTab('suggested')">Sugeridas</button>
+                        <button class="tab-btn" onclick="showTab('selected')">Seleccionadas</button>
+                    </div>
+                </div>
+
+                <div id="suggested-tab" class="tab-content active">
+                    <div class="subjects-table">
+                        <div class="subject-item">
+                            <input type="checkbox" id="algebra">
+                            <div class="subject-info">
+                                <span class="subject-name">Álgebra Lineal</span>
+                                <span class="subject-details">3 créditos / MAT200</span>
+                            </div>
+                        </div>
+                        <div class="subject-item">
+                            <input type="checkbox" id="estructuras">
+                            <div class="subject-info">
+                                <span class="subject-name">Estructuras Discretas</span>
+                                <span class="subject-details">4 créditos / CS202</span>
+                            </div>
+                        </div>
+                        <div class="subject-item">
+                            <input type="checkbox" id="programacion">
+                            <div class="subject-info">
+                                <span class="subject-name">Programación Avanzada</span>
+                                <span class="subject-details">4 créditos / CS204</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="saveSelectedSubjects()">Guardar</button>
+                </div>
+
+                <div id="selected-tab" class="tab-content">
+                    <div class="selected-subjects" id="selectedSubjectsList">
+                        <!-- Los sujetos seleccionados aparecerán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

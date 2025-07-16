@@ -119,14 +119,43 @@
                 </div>
                 
                 <div class="external-activity">
-                    <h3>Agregar Actividad Externa</h3>
-                    <div class="input-group">
-                        <label>Nombre</label>
-                        <input type="text" id="activityName" placeholder="Nombre de la actividad">
+                    <h3>Actividades Externas</h3>
+                    <p>Agrega actividades que tienes fuera de la universidad (trabajo, deporte, etc.)</p>
+                    
+                    <!-- Lista de actividades agregadas -->
+                    <div class="activities-list" id="activitiesList">
+                        <!-- Las actividades se mostrarán aquí dinámicamente -->
                     </div>
-                    <div class="input-group">
-                        <label>Hora</label>
-                        <input type="time" id="activityTime">
+                    
+                    <!-- Formulario para agregar nueva actividad -->
+                    <div class="add-activity-form">
+                        <div class="input-group">
+                            <label>Nombre de la actividad</label>
+                            <input type="text" id="activityName" placeholder="Ej: Trabajo, Gym, Clases de inglés">
+                        </div>
+                        <div class="input-group">
+                            <label>Día</label>
+                            <select id="activityDay">
+                                <option value="">Seleccionar día</option>
+                                <option value="Lunes">Lunes</option>
+                                <option value="Martes">Martes</option>
+                                <option value="Miércoles">Miércoles</option>
+                                <option value="Jueves">Jueves</option>
+                                <option value="Viernes">Viernes</option>
+                                <option value="Sábado">Sábado</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Hora de inicio</label>
+                            <input type="time" id="activityTimeStart">
+                        </div>
+                        <div class="input-group">
+                            <label>Hora de fin</label>
+                            <input type="time" id="activityTimeEnd">
+                        </div>
+                        <button type="button" class="btn-secondary add-activity-btn" onclick="addExternalActivity()">
+                            <i class="fas fa-plus"></i> Agregar Actividad
+                        </button>
                     </div>
                 </div>
                 
@@ -135,6 +164,6 @@
         </div>
     </div>
 
-    <script src="js/preferences.js"></script>
+    <script src="js/preferences-fixed.js"></script>
 </body>
 </html>

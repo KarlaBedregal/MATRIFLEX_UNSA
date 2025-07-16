@@ -179,57 +179,108 @@ function savePreferences() {
         });
     });
     
-    // Obtener actividades externas
-    const activityName = document.getElementById('activityName').value;
-    const activityTime = document.getElementById('activityTime').value;
-    
-    if (activityName && activityTime) {
-        preferences.externalActivities.push({
-            name: activityName,
-            time: activityTime
-        });
-    }
+    // Obtener actividades externas desde localStorage
+    const savedActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    preferences.externalActivities = savedActivities;
     
     // Guardar en localStorage
     localStorage.setItem('userPreferences', JSON.stringify(preferences));
     
+    // Mostrar confirmación detallada
+    let message = '✅ Preferencias guardadas:\n';
+    message += `📅 Días disponibles: ${preferences.availableDays.length}\n`;
+    message += `🚫 Horarios bloqueados: ${preferences.blockedTimes.length}\n`;
+    message += `📝 Actividades externas: ${preferences.externalActivities.length}`;
+    
     showAlert('Preferencias guardadas exitosamente', 'success');
     
-    console.log('Preferencias guardadas:', preferences);
+    // Mostrar detalles en consola para debugging
+    console.log('✅ Preferencias guardadas:', preferences);
+    console.log('📊 Resumen:', {
+        diasDisponibles: preferences.availableDays,
+        horariosBloquados: preferences.blockedTimes.length,
+        actividadesExternas: preferences.externalActivities.length
+    });
+    
+    // Mostrar información adicional
+    setTimeout(() => {
+        showAlert('💡 Ahora ve al Generador de Horarios para usar estas preferencias', 'info');
+    }, 2000);
 }
 
 // Agregar actividad externa
+// Agregar actividad externa - NUEVA VERSIÓN
 function addExternalActivity() {
-    const activityName = document.getElementById('activityName').value;
-    const activityTime = document.getElementById('activityTime').value;
+    const activityName = document.getElementById('activityName').value.trim();
+    const activityDay = document.getElementById('activityDay').value;
+    const activityTimeStart = document.getElementById('activityTimeStart').value;
+    const activityTimeEnd = document.getElementById('activityTimeEnd').value;
     
-    if (!activityName || !activityTime) {
-        showAlert('Por favor completa el nombre y la hora de la actividad', 'warning');
+    // Validaciones
+    if (!activityName) {
+        showAlert('❌ Por favor ingresa el nombre de la actividad', 'warning');
         return;
     }
     
-    // Crear elemento visual para la actividad
-    const activityList = document.querySelector('.external-activities-list') || createActivityList();
+    if (!activityDay) {
+        showAlert('❌ Por favor selecciona un día', 'warning');
+        return;
+    }
     
-    const activityItem = document.createElement('div');
-    activityItem.className = 'activity-item';
-    activityItem.innerHTML = `
-        <div class="activity-info">
-            <span class="activity-name">${activityName}</span>
-            <span class="activity-time">${activityTime}</span>
-        </div>
-        <button onclick="removeActivity(this)" class="remove-activity">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+    if (!activityTimeStart || !activityTimeEnd) {
+        showAlert('❌ Por favor ingresa la hora de inicio y fin', 'warning');
+        return;
+    }
     
-    activityList.appendChild(activityItem);
+    if (activityTimeStart >= activityTimeEnd) {
+        showAlert('❌ La hora de fin debe ser después de la hora de inicio', 'warning');
+        return;
+    }
     
-    // Limpiar inputs
+    // Crear objeto de actividad
+    const activity = {
+        id: Date.now(), // ID único
+        name: activityName,
+        day: activityDay,
+        timeStart: activityTimeStart,
+        timeEnd: activityTimeEnd,
+        timeRange: `${activityTimeStart} - ${activityTimeEnd}`
+    };
+    
+    // Obtener actividades existentes
+    let savedActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    // Verificar conflictos de horario
+    const hasConflict = savedActivities.some(existing => 
+        existing.day === activity.day && 
+        ((activity.timeStart >= existing.timeStart && activity.timeStart < existing.timeEnd) ||
+         (activity.timeEnd > existing.timeStart && activity.timeEnd <= existing.timeEnd) ||
+         (activity.timeStart <= existing.timeStart && activity.timeEnd >= existing.timeEnd))
+    );
+    
+    if (hasConflict) {
+        showAlert('⚠️ Ya tienes una actividad en ese horario. Revisa tus actividades existentes.', 'warning');
+        return;
+    }
+    
+    // Agregar nueva actividad
+    savedActivities.push(activity);
+    
+    // Guardar en localStorage
+    localStorage.setItem('externalActivities', JSON.stringify(savedActivities));
+    
+    // Limpiar formulario
     document.getElementById('activityName').value = '';
-    document.getElementById('activityTime').value = '';
+    document.getElementById('activityDay').value = '';
+    document.getElementById('activityTimeStart').value = '';
+    document.getElementById('activityTimeEnd').value = '';
     
-    showAlert('Actividad externa agregada', 'success');
+    // Actualizar lista visual
+    displayExternalActivities();
+    
+    showAlert(`✅ Actividad "${activityName}" agregada exitosamente`, 'success');
+    
+    console.log('🎯 Actividad agregada:', activity);
 }
 
 // Crear lista de actividades si no existe
@@ -456,4 +507,62 @@ function showAlert(message, type = 'info') {
     URL.revokeObjectURL(url);
     
     showAlert('Preferencias exportadas exitosamente', 'success');
+}
+
+// ===== FUNCIONES PARA ACTIVIDADES EXTERNAS =====
+
+// Mostrar actividades externas al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    displayExternalActivities();
+});
+
+// Mostrar actividades externas
+function displayExternalActivities() {
+    const activitiesList = document.getElementById('activitiesList');
+    if (!activitiesList) return;
+    
+    const savedActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    if (savedActivities.length === 0) {
+        activitiesList.innerHTML = `
+            <div class="no-activities">
+                <i class="fas fa-calendar-plus"></i>
+                <p>No tienes actividades externas agregadas</p>
+            </div>
+        `;
+        return;
+    }
+    
+    activitiesList.innerHTML = `
+        <h4>Actividades agregadas (${savedActivities.length})</h4>
+        <div class="activities-grid">
+            ${savedActivities.map(activity => `
+                <div class="activity-card" data-id="${activity.id}">
+                    <div class="activity-header">
+                        <span class="activity-name">${activity.name}</span>
+                        <button onclick="removeExternalActivity(${activity.id})" class="remove-btn" title="Eliminar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="activity-details">
+                        <span class="activity-day">${activity.day}</span>
+                        <span class="activity-time">${activity.timeRange}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Eliminar actividad externa
+function removeExternalActivity(activityId) {
+    let savedActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    const activityToRemove = savedActivities.find(a => a.id === activityId);
+    
+    if (activityToRemove) {
+        savedActivities = savedActivities.filter(a => a.id !== activityId);
+        localStorage.setItem('externalActivities', JSON.stringify(savedActivities));
+        displayExternalActivities();
+        showAlert(`✅ Actividad "${activityToRemove.name}" eliminada`, 'success');
+    }
 }

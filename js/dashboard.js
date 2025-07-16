@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar materias sugeridas
     loadSuggestedSubjects();
     
+    // Cargar materias seleccionadas
+    loadSelectedSubjects();
+    
     // Inicializar tabs
     initializeTabs();
 });
@@ -28,6 +31,7 @@ function loadSuggestedSubjects() {
             name: 'Álgebra Lineal',
             credits: 3,
             code: 'MAT200',
+            category: 'matematicas',
             prerequisites: ['Álgebra Básica']
         },
         {
@@ -35,6 +39,7 @@ function loadSuggestedSubjects() {
             name: 'Estructuras Discretas',
             credits: 4,
             code: 'CS202',
+            category: 'programacion',
             prerequisites: ['Matemática Discreta']
         },
         {
@@ -42,12 +47,195 @@ function loadSuggestedSubjects() {
             name: 'Programación Avanzada',
             credits: 4,
             code: 'CS204',
+            category: 'programacion',
             prerequisites: ['Programación I']
+        },
+        {
+            id: 'calculo',
+            name: 'Cálculo Diferencial',
+            credits: 4,
+            code: 'MAT201',
+            category: 'matematicas',
+            prerequisites: ['Álgebra']
+        },
+        {
+            id: 'basedatos',
+            name: 'Base de Datos',
+            credits: 3,
+            code: 'CS301',
+            category: 'programacion',
+            prerequisites: ['Programación II']
+        },
+        {
+            id: 'ingles',
+            name: 'Inglés Técnico',
+            credits: 2,
+            code: 'LAN101',
+            category: 'idiomas',
+            prerequisites: []
         }
     ];
     
     // Guardar en localStorage para uso posterior
     localStorage.setItem('suggestedSubjects', JSON.stringify(subjects));
+    
+    // Renderizar materias sugeridas
+    renderSuggestedSubjects(subjects);
+}
+
+// Renderizar materias sugeridas
+function renderSuggestedSubjects(subjects) {
+    const container = document.querySelector('#suggested-tab .subjects-table');
+    if (!container) return;
+    
+    const selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    const selectedIds = selectedSubjects.map(s => s.id || s.name);
+    
+    container.innerHTML = subjects.map(subject => `
+        <div class="subject-item">
+            <input type="checkbox" 
+                   id="${subject.id}" 
+                   value="${subject.id}"
+                   ${selectedIds.includes(subject.id) ? 'checked' : ''}>
+            <div class="subject-info">
+                <span class="subject-name">${subject.name}</span>
+                <span class="subject-details">${subject.credits} créditos / ${subject.code}</span>
+                <span class="subject-category">${getCategoryLabel(subject.category)}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Obtener etiqueta de categoría
+function getCategoryLabel(category) {
+    const labels = {
+        'matematicas': '📊 Matemáticas',
+        'programacion': '💻 Programación',
+        'idiomas': '🌍 Idiomas',
+        'ciencias': '🔬 Ciencias',
+        'general': '📚 General'
+    };
+    return labels[category] || '📚 General';
+}
+
+// Cargar materias seleccionadas
+function loadSelectedSubjects() {
+    const selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    renderSelectedSubjects(selectedSubjects);
+}
+
+// Renderizar materias seleccionadas
+function renderSelectedSubjects(subjects) {
+    const container = document.getElementById('selectedSubjectsList');
+    if (!container) return;
+    
+    if (subjects.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-book-open"></i>
+                <p>No hay materias seleccionadas</p>
+                <p>Ve a la pestaña "Sugeridas" para seleccionar materias</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="selected-subjects-header">
+            <h3>Materias Seleccionadas (${subjects.length})</h3>
+            <p>Total de créditos: ${subjects.reduce((sum, s) => sum + (s.credits || 3), 0)}</p>
+        </div>
+        <div class="selected-subjects-list">
+            ${subjects.map(subject => `
+                <div class="selected-subject-item">
+                    <div class="subject-info">
+                        <span class="subject-name">${subject.name || subject}</span>
+                        <span class="subject-details">${subject.credits || 3} créditos / ${subject.code || 'N/A'}</span>
+                        ${subject.category ? `<span class="subject-category">${getCategoryLabel(subject.category)}</span>` : ''}
+                    </div>
+                    <button onclick="removeSubject('${subject.id || subject.name}')" class="remove-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+        <div class="selected-actions">
+            <button onclick="clearAllSubjects()" class="btn-secondary">
+                <i class="fas fa-trash"></i> Limpiar Todo
+            </button>
+            <button onclick="goToScheduleGenerator()" class="btn-primary">
+                <i class="fas fa-magic"></i> Generar Horarios
+            </button>
+        </div>
+    `;
+}
+
+// Guardar materias seleccionadas
+function saveSelectedSubjects() {
+    const checkboxes = document.querySelectorAll('#suggested-tab input[type="checkbox"]:checked');
+    const suggestedSubjects = JSON.parse(localStorage.getItem('suggestedSubjects')) || [];
+    
+    const selectedSubjects = [];
+    checkboxes.forEach(checkbox => {
+        const subject = suggestedSubjects.find(s => s.id === checkbox.value);
+        if (subject) {
+            selectedSubjects.push(subject);
+        }
+    });
+    
+    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
+    
+    // Actualizar vista de materias seleccionadas
+    renderSelectedSubjects(selectedSubjects);
+    
+    // Mostrar mensaje de éxito
+    showAlert(`✅ ${selectedSubjects.length} materias seleccionadas guardadas`, 'success');
+    
+    // Cambiar a la pestaña de seleccionadas
+    showTab('selected');
+}
+
+// Eliminar materia seleccionada
+function removeSubject(subjectId) {
+    let selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    selectedSubjects = selectedSubjects.filter(s => (s.id || s.name) !== subjectId);
+    
+    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
+    renderSelectedSubjects(selectedSubjects);
+    
+    // Actualizar checkboxes en la pestaña sugeridas
+    const checkbox = document.getElementById(subjectId);
+    if (checkbox) {
+        checkbox.checked = false;
+    }
+    
+    showAlert('Materia eliminada', 'info');
+}
+
+// Limpiar todas las materias
+function clearAllSubjects() {
+    if (confirm('¿Estás seguro de que quieres eliminar todas las materias seleccionadas?')) {
+        localStorage.removeItem('selectedSubjects');
+        renderSelectedSubjects([]);
+        
+        // Desmarcar todos los checkboxes
+        const checkboxes = document.querySelectorAll('#suggested-tab input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        
+        showAlert('Todas las materias eliminadas', 'info');
+    }
+}
+
+// Ir al generador de horarios
+function goToScheduleGenerator() {
+    const selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    
+    if (selectedSubjects.length === 0) {
+        showAlert('Selecciona al menos una materia antes de generar horarios', 'warning');
+        return;
+    }
+    
+    window.location.href = 'schedule-generator.html';
 }
 
 // Inicializar tabs
@@ -78,75 +266,6 @@ function showTab(tabName) {
     
     if (activeButton) activeButton.classList.add('active');
     if (activeContent) activeContent.classList.add('active');
-}
-
-// Guardar materias seleccionadas
-function saveSelectedSubjects() {
-    const checkboxes = document.querySelectorAll('#suggested-tab input[type="checkbox"]:checked');
-    const selectedSubjects = [];
-    
-    checkboxes.forEach(checkbox => {
-        const subjectItem = checkbox.closest('.subject-item');
-        const subjectName = subjectItem.querySelector('.subject-name').textContent;
-        const subjectDetails = subjectItem.querySelector('.subject-details').textContent;
-        
-        selectedSubjects.push({
-            id: checkbox.id,
-            name: subjectName,
-            details: subjectDetails
-        });
-    });
-    
-    // Guardar en localStorage
-    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
-    
-    // Actualizar tab de materias seleccionadas
-    updateSelectedSubjectsTab(selectedSubjects);
-    
-    // Mostrar mensaje de éxito
-    showAlert('Materias guardadas exitosamente', 'success');
-    
-    // Cambiar a tab de seleccionadas
-    showTab('selected');
-}
-
-// Actualizar tab de materias seleccionadas
-function updateSelectedSubjectsTab(subjects) {
-    const selectedList = document.getElementById('selectedSubjectsList');
-    
-    if (subjects.length === 0) {
-        selectedList.innerHTML = '<p class="no-subjects">No has seleccionado ninguna materia aún.</p>';
-        return;
-    }
-    
-    selectedList.innerHTML = subjects.map(subject => `
-        <div class="subject-item selected">
-            <div class="subject-info">
-                <span class="subject-name">${subject.name}</span>
-                <span class="subject-details">${subject.details}</span>
-            </div>
-            <button onclick="removeSubject('${subject.id}')" class="remove-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `).join('');
-}
-
-// Remover materia seleccionada
-function removeSubject(subjectId) {
-    let selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
-    selectedSubjects = selectedSubjects.filter(subject => subject.id !== subjectId);
-    
-    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
-    updateSelectedSubjectsTab(selectedSubjects);
-    
-    // Desmarcar checkbox en el tab de sugeridas
-    const checkbox = document.getElementById(subjectId);
-    if (checkbox) {
-        checkbox.checked = false;
-    }
-    
-    showAlert('Materia removida', 'info');
 }
 
 // Mostrar ayuda
@@ -235,16 +354,88 @@ function showHelp() {
     });
 }
 
-// Cargar materias seleccionadas al inicializar
-document.addEventListener('DOMContentLoaded', function() {
-    const selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
-    updateSelectedSubjectsTab(selectedSubjects);
+// Función de alerta mejorada
+function showAlert(message, type = 'info') {
+    // Crear o encontrar el contenedor de alertas
+    let alertContainer = document.querySelector('.alert-container');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.className = 'alert-container';
+        alertContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
+        document.body.appendChild(alertContainer);
+    }
     
-    // Marcar checkboxes de materias ya seleccionadas
-    selectedSubjects.forEach(subject => {
-        const checkbox = document.getElementById(subject.id);
-        if (checkbox) {
-            checkbox.checked = true;
+    // Crear la alerta
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    
+    const colors = {
+        success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+        warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+        error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
+        info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    alert.style.cssText = `
+        background-color: ${color.bg};
+        border: 1px solid ${color.border};
+        color: ${color.text};
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 250px;
+        max-width: 400px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+    
+    const icons = {
+        success: '✓',
+        warning: '⚠',
+        error: '✗',
+        info: 'ℹ'
+    };
+    
+    alert.innerHTML = `
+        <span style="font-size: 16px; font-weight: bold;">${icons[type] || icons.info}</span>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none; 
+            border: none; 
+            font-size: 18px; 
+            cursor: pointer; 
+            margin-left: auto;
+            color: ${color.text};
+            opacity: 0.7;
+        ">×</button>
+    `;
+    
+    alertContainer.appendChild(alert);
+    
+    // Animar entrada
+    setTimeout(() => {
+        alert.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.style.transform = 'translateX(100%)';
+            setTimeout(() => alert.remove(), 300);
         }
-    });
-});
+    }, 5000);
+}

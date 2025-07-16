@@ -52,6 +52,37 @@
                     <button onclick="generateSchedule()" class="generate-btn">
                         <i class="fas fa-magic"></i> Generar Horarios Inteligentes
                     </button>
+                    <button onclick="addCustomCourse()" class="btn-secondary add-course-btn">
+                        <i class="fas fa-plus"></i> Agregar Curso Manual
+                    </button>
+                    <button onclick="loadTestData()" class="btn-secondary test-data-btn" style="background: #28a745;">
+                        <i class="fas fa-vial"></i> Cargar Datos de Prueba
+                    </button>
+                </div>
+                
+                <!-- Panel informativo de preferencias -->
+                <div class="preferences-info-panel" id="preferencesInfo" style="display: none;">
+                    <div class="info-header">
+                        <h4><i class="fas fa-info-circle"></i> Usando tus Preferencias</h4>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-item">
+                            <span class="info-label">Materias seleccionadas:</span>
+                            <span class="info-value" id="selectedSubjectsCount">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Horario preferido:</span>
+                            <span class="info-value" id="preferredTimeInfo">No configurado</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Días disponibles:</span>
+                            <span class="info-value" id="availableDaysInfo">Todos</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Actividades externas:</span>
+                            <span class="info-value" id="externalActivitiesCount">0</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="schedule-section">
@@ -172,6 +203,6 @@
         </div>
     </div>
 
-    <script src="js/schedule.js"></script>
+    <script src="js/schedule-clean.js"></script>
 </body>
 </html>

@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar materias seleccionadas
     loadSelectedSubjects();
     
+    // Mostrar información de preferencias
+    showPreferencesInfo();
+    
+    // Mostrar información de preferencias
+    showUserPreferencesInfo();
+    
     // Inicializar interfaz mejorada
     initializeAdvancedInterface();
 });
@@ -137,15 +143,32 @@ function addScheduleNavigation() {
 
 // Generar horarios mejorado
 function generateSchedule() {
+    // Validar que hay materias seleccionadas
+    if (!selectedSubjects || selectedSubjects.length === 0) {
+        showAlert('❌ No hay materias seleccionadas. Ve a "Gestión de Materias" primero.', 'error');
+        return;
+    }
+    
+    // Validar que hay preferencias configuradas
+    if (!userPreferences || !userPreferences.availableDays || userPreferences.availableDays.length === 0) {
+        showAlert('❌ No has configurado tus preferencias. Ve a "Preferencias" primero.', 'error');
+        return;
+    }
+    
     const generateBtn = document.querySelector('.generate-btn');
     generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
     generateBtn.disabled = true;
+    
+    // Mostrar información de generación
+    console.log('🚀 Iniciando generación de horarios con:');
+    console.log('📚 Materias:', selectedSubjects);
+    console.log('⚙️ Preferencias:', userPreferences);
     
     // Simular procesamiento avanzado
     showGenerationProgress();
     
     setTimeout(() => {
-        // Generar múltiples horarios
+        // Generar múltiples horarios usando los datos reales
         generateMultipleSchedules();
         
         // Mostrar el primer horario
@@ -154,7 +177,9 @@ function generateSchedule() {
         generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generar Nuevos Horarios';
         generateBtn.disabled = false;
         
-        showAlert('¡Se generaron ' + generatedSchedules.length + ' horarios optimizados!', 'success');
+        // Mostrar resumen detallado
+        showGenerationSummary();
+        
     }, 3000);
 }
 
@@ -241,48 +266,177 @@ function updateProgress(step, percentage, text) {
 function generateMultipleSchedules() {
     generatedSchedules = [];
     
+    console.log('🚀 === INICIO DE GENERACIÓN DE HORARIOS ===');
+    console.log('📊 Estado inicial:');
+    console.log('  - selectedSubjects:', selectedSubjects);
+    console.log('  - selectedSubjects.length:', selectedSubjects.length);
+    
     if (selectedSubjects.length === 0) {
+        console.error('❌ Error: No hay materias seleccionadas');
         showAlert('No hay materias seleccionadas para generar horarios', 'error');
         return;
     }
     
-    // Configurar horarios disponibles
-    const timeSlots = [
-        '7:00 AM - 8:30 AM', '8:00 AM - 9:30 AM', '9:00 AM - 10:30 AM', 
-        '10:00 AM - 11:30 AM', '11:00 AM - 12:30 PM', '12:00 PM - 1:30 PM',
-        '1:00 PM - 2:30 PM', '2:00 PM - 3:30 PM', '3:00 PM - 4:30 PM',
-        '4:00 PM - 5:30 PM', '5:00 PM - 6:30 PM', '6:00 PM - 7:30 PM'
-    ];
+    // Obtener datos reales del usuario
+    const userPrefs = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
     
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    console.log('🎯 Generando horarios con datos reales:');
+    console.log('📚 Materias:', selectedSubjects);
+    console.log('⚙️ Preferencias:', userPrefs);
+    console.log('🎯 Actividades externas:', externalActivities);
+    
+    // Usar días disponibles del usuario o por defecto
+    const availableDays = userPrefs.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    
+    // Configurar horarios basados en preferencias
+    let timeSlots = [];
+    if (userPrefs.preferredTime === 'morning' || !userPrefs.preferredTime) {
+        timeSlots = ['7:00 AM - 8:30 AM', '8:00 AM - 9:30 AM', '9:00 AM - 10:30 AM', '10:00 AM - 11:30 AM', '11:00 AM - 12:30 PM'];
+    } else if (userPrefs.preferredTime === 'afternoon') {
+        timeSlots = ['12:00 PM - 1:30 PM', '1:00 PM - 2:30 PM', '2:00 PM - 3:30 PM', '3:00 PM - 4:30 PM', '4:00 PM - 5:30 PM'];
+    } else if (userPrefs.preferredTime === 'evening') {
+        timeSlots = ['5:00 PM - 6:30 PM', '6:00 PM - 7:30 PM', '7:00 PM - 8:30 PM'];
+    } else {
+        // Horario mixto
+        timeSlots = [
+            '7:00 AM - 8:30 AM', '8:00 AM - 9:30 AM', '9:00 AM - 10:30 AM', 
+            '10:00 AM - 11:30 AM', '11:00 AM - 12:30 PM', '12:00 PM - 1:30 PM',
+            '1:00 PM - 2:30 PM', '2:00 PM - 3:30 PM', '3:00 PM - 4:30 PM',
+            '4:00 PM - 5:30 PM', '5:00 PM - 6:30 PM', '6:00 PM - 7:30 PM'
+        ];
+    }
+    
     const rooms = ['A101', 'A205', 'Lab B', 'Lab C', 'C101', 'C205', 'D101'];
     
-    // Generar 5 horarios diferentes
+    // Función para verificar conflictos con actividades externas
+    function hasConflictWithActivities(day, timeSlot) {
+        const [startTime, endTime] = timeSlot.split(' - ');
+        
+        return externalActivities.some(activity => {
+            if (activity.day !== day) return false;
+            
+            // Convertir horarios a minutos para comparación precisa
+            const courseStart = timeToMinutes(startTime);
+            const courseEnd = timeToMinutes(endTime);
+            const activityStart = timeToMinutes(activity.timeStart);
+            const activityEnd = timeToMinutes(activity.timeEnd);
+            
+            // Verificar superposición: hay conflicto si los horarios se solapan
+            const hasOverlap = courseStart < activityEnd && courseEnd > activityStart;
+            
+            if (hasOverlap) {
+                console.warn(`⚠️ Conflicto detectado: ${day} ${timeSlot} choca con actividad ${activity.name} (${activity.timeStart} - ${activity.timeEnd})`);
+                return true;
+            }
+            
+            return false;
+        });
+    }
+    
+    // Convertir hora a minutos (ej: "9:00 AM" -> 540)
+    function timeToMinutes(timeStr) {
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        return hours * 60 + (minutes || 0);
+    }
+    
+    // Función global para conversión de tiempo (disponible en todo el archivo)
+    window.timeToMinutes = timeToMinutes;
+    
+    // Generar 5 horarios diferentes con estilos variados
+    const scheduleStyles = [
+        { name: 'Optimizado Personalizado', description: 'Basado en tus preferencias exactas' },
+        { name: 'Horario Matutino', description: 'Concentrado en la mañana' },
+        { name: 'Horario Distribuido', description: 'Espaciado a través de la semana' },
+        { name: 'Horario Compacto', description: 'Concentrado en menos días' },
+        { name: 'Horario Flexible', description: 'Máxima adaptabilidad' }
+    ];
+    
     for (let i = 0; i < 5; i++) {
         const schedule = {
-            name: getScheduleName(i),
-            quality: Math.floor(Math.random() * 25) + 75, // 75-100%
-            courses: []
+            name: scheduleStyles[i].name,
+            description: scheduleStyles[i].description,
+            quality: Math.floor(Math.random() * 15) + 85, // 85-100%
+            courses: [],
+            conflictsWithActivities: 0
         };
         
-        // Asignar cada materia seleccionada a un horario
+        // Asignar cada materia seleccionada evitando conflictos
         selectedSubjects.forEach((subject, index) => {
-            const dayIndex = (index + i) % days.length;
-            const timeIndex = (index + i * 2) % timeSlots.length;
-            const roomIndex = (index + i) % rooms.length;
+            console.log(`\n📝 Procesando materia ${index + 1}/${selectedSubjects.length}:`, subject);
             
-            schedule.courses.push({
-                name: subject.name,
-                time: timeSlots[timeIndex],
-                day: days[dayIndex],
-                room: rooms[roomIndex],
-                color: getCourseColor(subject.category || 'general'),
-                credits: subject.credits
-            });
+            let assigned = false;
+            let attempts = 0;
+            let bestOption = null;
+            let conflictFound = false;
+            
+            // Intentar múltiples opciones para evitar conflictos
+            while (!assigned && attempts < 30) {
+                const dayIndex = (index + i + attempts) % availableDays.length;
+                const timeIndex = (index + i * 2 + attempts) % timeSlots.length;
+                const roomIndex = (index + i) % rooms.length;
+                
+                const selectedDay = availableDays[dayIndex];
+                const selectedTime = timeSlots[timeIndex];
+                
+                // Verificar conflictos con actividades externas
+                const hasConflict = hasConflictWithActivities(selectedDay, selectedTime);
+                
+                if (!hasConflict) {
+                    // Opción sin conflictos - usar inmediatamente
+                    const newCourse = {
+                        name: subject.name || subject,
+                        time: selectedTime,
+                        day: selectedDay,
+                        room: rooms[roomIndex],
+                        color: getCourseColor(subject.category || 'general'),
+                        credits: subject.credits
+                    };
+                    
+                    console.log(`  ✅ Asignado sin conflictos:`, newCourse);
+                    schedule.courses.push(newCourse);
+                    assigned = true;
+                } else {
+                    // Guardar como opción de respaldo
+                    if (!bestOption) {
+                        bestOption = {
+                            name: subject.name || subject,
+                            time: selectedTime,
+                            day: selectedDay,
+                            room: rooms[roomIndex],
+                            color: getCourseColor(subject.category || 'general'),
+                            credits: subject.credits,
+                            hasConflict: true,
+                            conflictDetails: getConflictDetails(selectedDay, selectedTime, externalActivities)
+                        };
+                    }
+                    conflictFound = true;
+                    attempts++;
+                }
+            }
+            
+            // Si no se pudo asignar sin conflictos, usar la mejor opción con conflicto
+            if (!assigned && bestOption) {
+                console.log(`  ⚠️ Asignado con conflicto:`, bestOption);
+                schedule.courses.push(bestOption);
+                schedule.conflictsWithActivities++;
+                console.warn(`❌ Materia "${subject.name || subject}" asignada con conflicto en ${bestOption.day} ${bestOption.time}`);
+            } else if (!assigned) {
+                console.error(`  ❌ No se pudo asignar la materia:`, subject);
+            }
         });
         
-        // Calcular calidad basada en distribución
-        schedule.quality = calculateScheduleQuality(schedule);
+        console.log(`\n📋 Horario ${i + 1} completado:`, schedule);
+        console.log(`  - Cursos asignados: ${schedule.courses.length}`);
+        console.log(`  - Conflictos: ${schedule.conflictsWithActivities}`);
+        
+        // Calcular calidad basada en distribución y preferencias
+        schedule.quality = calculateScheduleQuality(schedule, userPrefs, externalActivities);
         
         generatedSchedules.push(schedule);
     }
@@ -290,8 +444,132 @@ function generateMultipleSchedules() {
     // Ordenar por calidad (mejor primero)
     generatedSchedules.sort((a, b) => b.quality - a.quality);
     
+    console.log('\n🎯 === HORARIOS GENERADOS ===');
+    console.log(`Total de horarios: ${generatedSchedules.length}`);
+    generatedSchedules.forEach((sched, i) => {
+        console.log(`Horario ${i + 1}: ${sched.name} - ${sched.courses.length} cursos - Calidad: ${sched.quality}%`);
+    });
+    
+    // Verificar y alertar sobre conflictos
+    checkAndAlertConflicts(generatedSchedules);
+    
     currentScheduleIndex = 0;
     updateScheduleNavigation();
+}
+
+// Obtener detalles específicos de conflictos
+function getConflictDetails(day, timeSlot, externalActivities) {
+    const [startTime, endTime] = timeSlot.split(' - ');
+    const conflicts = [];
+    
+    externalActivities.forEach(activity => {
+        if (activity.day === day) {
+            const courseStart = timeToMinutes(startTime);
+            const courseEnd = timeToMinutes(endTime);
+            const activityStart = timeToMinutes(activity.timeStart);
+            const activityEnd = timeToMinutes(activity.timeEnd);
+            
+            if (courseStart < activityEnd && courseEnd > activityStart) {
+                conflicts.push({
+                    activityName: activity.name,
+                    activityTime: `${activity.timeStart} - ${activity.timeEnd}`,
+                    overlapStart: Math.max(courseStart, activityStart),
+                    overlapEnd: Math.min(courseEnd, activityEnd)
+                });
+            }
+        }
+    });
+    
+    return conflicts;
+}
+
+// Verificar conflictos en todos los horarios y mostrar alertas
+function checkAndAlertConflicts(schedules) {
+    const totalConflicts = schedules.reduce((sum, schedule) => sum + schedule.conflictsWithActivities, 0);
+    const schedulesWithConflicts = schedules.filter(s => s.conflictsWithActivities > 0).length;
+    
+    if (totalConflicts > 0) {
+        showConflictAlert(totalConflicts, schedulesWithConflicts, schedules.length);
+    } else {
+        showAlert('✅ ¡Perfecto! Se generaron horarios sin conflictos con tus actividades externas.', 'success');
+    }
+}
+
+// Mostrar alerta detallada de conflictos
+function showConflictAlert(totalConflicts, schedulesWithConflicts, totalSchedules) {
+    const conflictModal = document.createElement('div');
+    conflictModal.className = 'modal-overlay conflict-alert';
+    conflictModal.innerHTML = `
+        <div class="modal conflict-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Conflictos Detectados</h3>
+            </div>
+            <div class="modal-body">
+                <div class="conflict-summary">
+                    <p><strong>⚠️ Se detectaron ${totalConflicts} conflictos</strong></p>
+                    <p>📊 ${schedulesWithConflicts} de ${totalSchedules} horarios tienen conflictos</p>
+                    <p>🎯 ${totalSchedules - schedulesWithConflicts} horarios están libres de conflictos</p>
+                </div>
+                
+                <div class="conflict-recommendations">
+                    <h4>💡 Recomendaciones:</h4>
+                    <ul>
+                        <li>✅ Revisa los horarios con <strong>mayor calidad</strong> - tienen menos conflictos</li>
+                        <li>📝 Considera <strong>modificar tus actividades externas</strong> en Preferencias</li>
+                        <li>🔄 Puedes <strong>regenerar</strong> para obtener nuevas combinaciones</li>
+                        <li>⚡ Los conflictos se muestran en <strong>rojo</strong> en el horario</li>
+                    </ul>
+                </div>
+                
+                <div class="conflict-actions">
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-primary">
+                        Entendido
+                    </button>
+                    <button onclick="goToPreferences()" class="btn-secondary">
+                        Editar Preferencias
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Aplicar estilos
+    conflictModal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const modal = conflictModal.querySelector('.modal');
+    modal.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(conflictModal);
+    
+    // Cerrar al hacer clic fuera
+    conflictModal.addEventListener('click', (e) => {
+        if (e.target === conflictModal) {
+            conflictModal.remove();
+        }
+    });
+}
+
+// Ir a preferencias
+function goToPreferences() {
+    window.location.href = 'preferences.html';
 }
 
 // Obtener nombre descriptivo del horario
@@ -319,8 +597,8 @@ function getCourseColor(category) {
 }
 
 // Calcular calidad del horario
-function calculateScheduleQuality(schedule) {
-    let quality = 80; // Base
+function calculateScheduleQuality(schedule, userPrefs = {}, externalActivities = []) {
+    let quality = 70; // Base más bajo para dar más rango
     
     // Bonificación por distribución equilibrada
     const dayDistribution = {};
@@ -329,24 +607,91 @@ function calculateScheduleQuality(schedule) {
     });
     
     const maxCoursesPerDay = Math.max(...Object.values(dayDistribution));
-    if (maxCoursesPerDay <= 2) quality += 10;
-    else if (maxCoursesPerDay <= 3) quality += 5;
+    if (maxCoursesPerDay <= 2) quality += 15;
+    else if (maxCoursesPerDay <= 3) quality += 10;
+    else if (maxCoursesPerDay > 4) quality -= 10;
     
-    // Bonificación por horarios matutinos
-    const morningCourses = schedule.courses.filter(course => 
-        course.time.includes('AM') && !course.time.includes('11:') && !course.time.includes('12:')
-    ).length;
+    // Bonificación por respetar preferencia de horario
+    if (userPrefs.preferredTime) {
+        let matchingCourses = 0;
+        
+        schedule.courses.forEach(course => {
+            const isMorning = course.time.includes('AM') && !course.time.includes('12:');
+            const isAfternoon = course.time.includes('PM') && 
+                (course.time.includes('12:') || course.time.includes('1:') || 
+                 course.time.includes('2:') || course.time.includes('3:') || 
+                 course.time.includes('4:') || course.time.includes('5:'));
+            const isEvening = course.time.includes('6:00 PM') || course.time.includes('7:00 PM');
+            
+            if (userPrefs.preferredTime === 'morning' && isMorning) matchingCourses++;
+            if (userPrefs.preferredTime === 'afternoon' && isAfternoon) matchingCourses++;
+            if (userPrefs.preferredTime === 'evening' && isEvening) matchingCourses++;
+        });
+        
+        const matchPercentage = matchingCourses / schedule.courses.length;
+        quality += Math.floor(matchPercentage * 20);
+    }
     
-    if (morningCourses >= schedule.courses.length * 0.7) quality += 10;
+    // Bonificación por usar días disponibles del usuario
+    if (userPrefs.availableDays && userPrefs.availableDays.length > 0) {
+        const coursesInAvailableDays = schedule.courses.filter(course => 
+            userPrefs.availableDays.includes(course.day)
+        ).length;
+        
+        const availabilityMatch = coursesInAvailableDays / schedule.courses.length;
+        quality += Math.floor(availabilityMatch * 15);
+    }
     
-    // Penalización por horarios muy tardíos
-    const lateCourses = schedule.courses.filter(course => 
-        course.time.includes('6:00 PM') || course.time.includes('7:00 PM')
-    ).length;
+    // Penalización por conflictos con actividades externas
+    if (schedule.conflictsWithActivities) {
+        quality -= schedule.conflictsWithActivities * 10;
+    }
     
-    quality -= lateCourses * 5;
+    // Penalización por cursos marcados con conflicto
+    const conflictCourses = schedule.courses.filter(course => course.hasConflict).length;
+    if (conflictCourses > 0) {
+        quality -= conflictCourses * 5;
+    }
     
+    // Bonificación por espaciado entre cursos (evitar cursos consecutivos)
+    let wellSpacedBonus = 0;
+    Object.keys(dayDistribution).forEach(day => {
+        const coursesThisDay = schedule.courses
+            .filter(course => course.day === day)
+            .sort((a, b) => {
+                const timeA = parseInt(a.time.split(':')[0]);
+                const timeB = parseInt(b.time.split(':')[0]);
+                return timeA - timeB;
+            });
+        
+        if (coursesThisDay.length > 1) {
+            // Verificar si hay al menos 1 hora entre cursos
+            for (let i = 0; i < coursesThisDay.length - 1; i++) {
+                const endTimeA = coursesThisDay[i].time.split(' - ')[1];
+                const startTimeB = coursesThisDay[i + 1].time.split(' - ')[0];
+                
+                // Simplificado: si no son horas consecutivas, dar bonificación
+                if (!areConsecutiveHours(endTimeA, startTimeB)) {
+                    wellSpacedBonus += 3;
+                }
+            }
+        }
+    });
+    
+    quality += wellSpacedBonus;
+    
+    // Asegurar que la calidad esté en el rango correcto
     return Math.min(100, Math.max(60, quality));
+}
+
+// Verificar si dos horas son consecutivas
+function areConsecutiveHours(endTime, startTime) {
+    // Simplificado: comparar si la diferencia es mínima
+    const endHour = parseInt(endTime.split(':')[0]);
+    const startHour = parseInt(startTime.split(':')[0]);
+    
+    // Si la diferencia es de 1 hora o menos, considerarlos consecutivos
+    return Math.abs(startHour - endHour) <= 1;
 }
 
 // Mostrar horario generado mejorado
@@ -382,38 +727,133 @@ function clearScheduleGrid() {
 
 // Mostrar horario actual
 function displayCurrentSchedule() {
-    if (generatedSchedules.length === 0) return;
+    console.log('\n🖥️ === MOSTRANDO HORARIO ACTUAL ===');
+    console.log('📊 Estado del sistema:');
+    console.log('  - generatedSchedules.length:', generatedSchedules.length);
+    console.log('  - currentScheduleIndex:', currentScheduleIndex);
+    
+    if (generatedSchedules.length === 0) {
+        console.warn('🚫 No hay horarios generados para mostrar');
+        showAlert('No hay horarios generados. Haz clic en "Generar Horarios" primero.', 'warning');
+        return;
+    }
     
     const currentSchedule = generatedSchedules[currentScheduleIndex];
+    console.log('🎯 Horario actual:', currentSchedule);
+    console.log('📚 Cursos en el horario:', currentSchedule.courses);
     
     // Actualizar título
     const sectionTitle = document.querySelector('.schedule-section h3');
     if (sectionTitle) {
         sectionTitle.innerHTML = `${currentSchedule.name} <span class="quality-badge">Calidad: ${currentSchedule.quality}%</span>`;
+        console.log('✅ Título actualizado');
+    } else {
+        console.warn('⚠️ No se encontró el elemento .schedule-section h3');
     }
     
     // Limpiar grid
     clearScheduleGrid();
+    console.log('🧹 Grid limpiado');
+    
+    // Verificar si hay cursos para mostrar
+    if (!currentSchedule.courses || currentSchedule.courses.length === 0) {
+        console.warn('🚫 No hay cursos en el horario actual');
+        showAlert('No hay cursos para mostrar en este horario', 'warning');
+        return;
+    }
+    
+    console.log(`📚 Intentando colocar ${currentSchedule.courses.length} cursos:`);
     
     // Colocar cursos en el grid
-    currentSchedule.courses.forEach(course => {
+    let coursesPlaced = 0;
+    currentSchedule.courses.forEach((course, index) => {
+        console.log(`\n📍 Curso ${index + 1}:`, course);
+        
         const slot = findSlotForCourse(course);
         if (slot) {
+            const conflictClass = course.hasConflict ? 'has-conflict' : '';
+            const conflictIcon = course.hasConflict ? '<i class="fas fa-exclamation-triangle conflict-icon"></i>' : '';
+            
             slot.innerHTML = `
-                <div class="class-block ${course.color}">
-                    <div class="class-name">${course.name}</div>
+                <div class="class-block ${course.color} ${conflictClass}">
+                    <div class="class-name">${course.name} ${conflictIcon}</div>
                     <div class="class-time">${course.time}</div>
                     <div class="class-room">${course.room}</div>
+                    ${course.hasConflict ? `<div class="conflict-info">⚠️ Conflicto detectado</div>` : ''}
                 </div>
             `;
             slot.classList.add('occupied');
+            coursesPlaced++;
+            
+            console.log(`✅ Curso "${course.name}" colocado exitosamente`);
+            
+            // Agregar evento click para mostrar detalles de conflicto
+            if (course.hasConflict) {
+                slot.addEventListener('click', () => showConflictDetails(course));
+            }
+        } else {
+            console.error(`❌ No se pudo colocar el curso "${course.name}" - slot no encontrado`);
+        }
+    });
+    
+    console.log(`\n📊 Resumen: ${coursesPlaced}/${currentSchedule.courses.length} cursos colocados en el grid`);
+    
+    // También mostrar actividades externas como referencia
+    displayExternalActivities();
+    
+    if (coursesPlaced === 0) {
+        showAlert('No se pudieron colocar cursos en el horario. Revisa la consola para más detalles.', 'error');
+    }
+}
+
+// Mostrar actividades externas en el horario
+function displayExternalActivities() {
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    if (externalActivities.length === 0) {
+        console.log('📝 No hay actividades externas para mostrar');
+        return;
+    }
+    
+    console.log('🎯 Mostrando actividades externas:', externalActivities);
+    
+    externalActivities.forEach((activity, index) => {
+        console.log(`\n🎯 Actividad ${index + 1}:`, activity);
+        
+        // Crear un curso simulado para usar la misma lógica de colocación
+        const simulatedCourse = {
+            name: activity.name,
+            time: `${activity.timeStart} - ${activity.timeEnd}`,
+            day: activity.day,
+            room: activity.location || 'Externa',
+            color: 'external-activity'
+        };
+        
+        const slot = findSlotForCourse(simulatedCourse);
+        if (slot && !slot.classList.contains('occupied')) {
+            slot.innerHTML = `
+                <div class="class-block external-activity">
+                    <div class="class-name">🎯 ${activity.name}</div>
+                    <div class="class-time">${activity.timeStart} - ${activity.timeEnd}</div>
+                    <div class="class-room">${activity.location || 'Externa'}</div>
+                    <div class="activity-type">Actividad Externa</div>
+                </div>
+            `;
+            slot.classList.add('occupied', 'external');
+            console.log(`✅ Actividad "${activity.name}" colocada exitosamente`);
+        } else {
+            console.warn(`⚠️ Slot ocupado o no encontrado para actividad "${activity.name}"`);
         }
     });
 }
 
 // Encontrar slot para un curso
-function findSlotForCourse(course) {
-    // Mapear días a índices
+// Función auxiliar para encontrar slots correctamente en el grid
+function findSlotForCourseFixed(course) {
+    console.log('=== NUEVA FUNCION DE BUSQUEDA DE SLOTS ===');
+    console.log('Curso a ubicar:', course);
+    
+    // Mapear dias a columnas
     const dayMap = {
         'Monday': 1,
         'Tuesday': 2,
@@ -422,7 +862,7 @@ function findSlotForCourse(course) {
         'Friday': 5
     };
     
-    // Mapear horas a filas (simplificado)
+    // Mapear horas a filas
     const timeMap = {
         '7:00 AM': 0,
         '8:00 AM': 1,
@@ -435,20 +875,391 @@ function findSlotForCourse(course) {
         '3:00 PM': 8,
         '4:00 PM': 9,
         '5:00 PM': 10,
-        '6:00 PM': 11
+        '6:00 PM': 11,
+        '7:00 PM': 12
+    };
+    
+    const hour = course.time.split(' - ')[0];
+    const dayColumn = dayMap[course.day];
+    const timeRow = timeMap[hour];
+    
+    console.log('Mapeo: dia=' + course.day + ' -> columna=' + dayColumn + ', hora=' + hour + ' -> fila=' + timeRow);
+    
+    if (dayColumn && timeRow !== undefined) {
+        const scheduleGrid = document.querySelector('.schedule-grid');
+        if (!scheduleGrid) {
+            console.error('No se encontro el grid de horarios');
+            return null;
+        }
+        
+        const allGridItems = scheduleGrid.children;
+        console.log('Total elementos en grid: ' + allGridItems.length);
+        
+        // El grid tiene estructura: 
+        // Fila 0: headers (6 elementos)
+        // Fila N: time-header + 5 slots (6 elementos cada una)
+        const headerRowElements = 6;
+        const elementsPerRow = 6;
+        
+        // Calcular posicion del slot
+        const rowStartIndex = headerRowElements + (timeRow * elementsPerRow);
+        const slotIndex = rowStartIndex + dayColumn;
+        
+        console.log('Calculando: inicio fila=' + rowStartIndex + ', slot objetivo=' + slotIndex);
+        
+        if (slotIndex < allGridItems.length) {
+            const targetElement = allGridItems[slotIndex];
+            console.log('Elemento encontrado, clase: ' + targetElement.className);
+            
+            if (targetElement.classList.contains('slot')) {
+                console.log('Slot valido encontrado');
+                return targetElement;
+            } else {
+                console.warn('Elemento no es slot, buscando alternativas...');
+                // Buscar slots cercanos
+                for (let offset = 1; offset <= 3; offset++) {
+                    const altIndex = slotIndex + offset;
+                    if (altIndex < allGridItems.length && allGridItems[altIndex].classList.contains('slot')) {
+                        console.log('Slot alternativo encontrado en posicion ' + altIndex);
+                        return allGridItems[altIndex];
+                    }
+                }
+                return null;
+            }
+        } else {
+            console.warn('Indice fuera de rango: ' + slotIndex + '/' + allGridItems.length);
+            return null;
+        }
+    }
+    
+    console.warn('No se pudo mapear el curso');
+    return null;
+}
+
+function findSlotForCourse(course) {
+    // Usar la nueva funcion corregida
+    return findSlotForCourseFixed(course);
+}
+
+// Mostrar detalles específicos de conflicto
+    const dayMap = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6
+    };
+    
+    // Mapear horas a filas (expandido para más horarios)
+    const timeMap = {
+        '7:00 AM': 0,
+        '8:00 AM': 1,
+        '9:00 AM': 2,
+        '10:00 AM': 3,
+        '11:00 AM': 4,
+        '12:00 PM': 5,
+        '1:00 PM': 6,
+        '2:00 PM': 7,
+        '3:00 PM': 8,
+        '4:00 PM': 9,
+        '5:00 PM': 10,
+        '6:00 PM': 11,
+        '7:00 PM': 12
     };
     
     const hour = course.time.split(' - ')[0];
     const dayIndex = dayMap[course.day];
     const timeIndex = timeMap[hour];
     
+    console.log(`� Mapeo:`)
+    console.log(`  - Día: ${course.day} → índice ${dayIndex}`);
+    console.log(`  - Hora: ${hour} → índice ${timeIndex}`);
+    
     if (dayIndex && timeIndex !== undefined) {
         const slots = document.querySelectorAll('.slot');
-        const targetIndex = timeIndex * 4 + (dayIndex - 1);
-        return slots[targetIndex];
+        console.log(`📏 Total de slots en el grid: ${slots.length}`);
+        
+        // Calcular índice considerando que hay 5 días (Lun-Vie) por defecto
+        const targetIndex = timeIndex * 5 + (dayIndex - 1);
+        
+        console.log(`🎯 Índice calculado: ${targetIndex}`);
+        console.log(`📐 Fórmula: ${timeIndex} * 5 + (${dayIndex} - 1) = ${targetIndex}`);
+        
+        if (targetIndex < slots.length && targetIndex >= 0) {
+            const targetSlot = slots[targetIndex];
+            console.log(`✅ Slot encontrado:`, targetSlot);
+            return targetSlot;
+        } else {
+            console.warn(`⚠️ Índice ${targetIndex} fuera de rango. Total slots: ${slots.length}`);
+            return null;
+        }
+    } else {
+        console.warn(`⚠️ No se pudo mapear: día=${course.day} hora=${hour}`);
+        console.warn(`⚠️ dayIndex=${dayIndex}, timeIndex=${timeIndex}`);
+        return null;
     }
     
     return null;
+}
+
+// Mostrar detalles específicos de conflicto
+function showConflictDetails(course) {
+    const conflictModal = document.createElement('div');
+    conflictModal.className = 'modal-overlay';
+    conflictModal.innerHTML = `
+        <div class="modal conflict-details-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Detalles del Conflicto</h3>
+                <button onclick="this.closest('.modal-overlay').remove()" class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="course-info">
+                    <h4>📚 Materia: ${course.name}</h4>
+                    <p><strong>🕒 Horario:</strong> ${course.day} ${course.time}</p>
+                    <p><strong>📍 Aula:</strong> ${course.room}</p>
+                </div>
+                
+                <div class="conflict-details">
+                    <h4>⚠️ Conflictos Detectados:</h4>
+                    ${course.conflictDetails ? course.conflictDetails.map(conflict => `
+                        <div class="conflict-item">
+                            <p><strong>🎯 Actividad:</strong> ${conflict.activityName}</p>
+                            <p><strong>⏰ Horario:</strong> ${conflict.activityTime}</p>
+                            <p><strong>🔴 Superposición:</strong> ${minutesToTime(conflict.overlapStart)} - ${minutesToTime(conflict.overlapEnd)}</p>
+                        </div>
+                    `).join('') : '<p>Conflicto general detectado</p>'}
+                </div>
+                
+                <div class="conflict-solutions">
+                    <h4>💡 Soluciones:</h4>
+                    <ul>
+                        <li>Modifica el horario de tu actividad externa</li>
+                        <li>Busca otro horario para esta materia</li>
+                        <li>Genera nuevos horarios alternativos</li>
+                    </ul>
+                </div>
+                
+                <div class="modal-actions">
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-secondary">
+                        Cerrar
+                    </button>
+                    <button onclick="goToPreferences()" class="btn-primary">
+                        Editar Actividades
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    styleModal(conflictModal);
+    document.body.appendChild(conflictModal);
+}
+
+// Convertir minutos a hora (540 -> "9:00 AM")
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+    
+    return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
+}
+
+// Mostrar resumen de generación
+function showGenerationSummary() {
+    const totalConflicts = generatedSchedules.reduce((sum, schedule) => sum + schedule.conflictsWithActivities, 0);
+    const bestSchedule = generatedSchedules[0]; // Ya están ordenados por calidad
+    const averageQuality = Math.round(generatedSchedules.reduce((sum, s) => sum + s.quality, 0) / generatedSchedules.length);
+    
+    const summaryMessage = totalConflicts === 0 
+        ? `¡Perfecto! Se generaron ${generatedSchedules.length} horarios sin conflictos. Calidad promedio: ${averageQuality}%`
+        : `Se generaron ${generatedSchedules.length} horarios (${totalConflicts} conflictos detectados). Mejor calidad: ${bestSchedule.quality}%`;
+    
+    const alertType = totalConflicts === 0 ? 'success' : 'warning';
+    
+    showAlert(summaryMessage, alertType);
+}
+
+// Agregar curso manual
+function addCustomCourse() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal add-course-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Agregar Curso Manual</h3>
+                <button onclick="this.closest('.modal-overlay').remove()" class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addCourseForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseName">Nombre del Curso:</label>
+                            <input type="text" id="courseName" required placeholder="ej: Cálculo Diferencial">
+                        </div>
+                        <div class="form-group">
+                            <label for="courseCode">Código:</label>
+                            <input type="text" id="courseCode" placeholder="ej: MAT-201">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseDay">Día:</label>
+                            <select id="courseDay" required>
+                                <option value="">Seleccionar día</option>
+                                <option value="Monday">Lunes</option>
+                                <option value="Tuesday">Martes</option>
+                                <option value="Wednesday">Miércoles</option>
+                                <option value="Thursday">Jueves</option>
+                                <option value="Friday">Viernes</option>
+                                <option value="Saturday">Sábado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseCredits">Créditos:</label>
+                            <input type="number" id="courseCredits" min="1" max="6" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime">Hora de Inicio:</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">Hora de Fin:</label>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseRoom">Aula:</label>
+                            <input type="text" id="courseRoom" placeholder="ej: A-101">
+                        </div>
+                        <div class="form-group">
+                            <label for="courseCategory">Categoría:</label>
+                            <select id="courseCategory">
+                                <option value="general">General</option>
+                                <option value="matematicas">Matemáticas</option>
+                                <option value="programacion">Programación</option>
+                                <option value="idiomas">Idiomas</option>
+                                <option value="ciencias">Ciencias</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="conflict-check" id="conflictCheck" style="display: none;">
+                    <div class="conflict-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="conflictMessage"></span>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="this.closest('.modal-overlay').remove()" class="btn-secondary">
+                        Cancelar
+                    </button>
+                    <button type="button" onclick="checkCourseConflicts()" class="btn-warning">
+                        Verificar Conflictos
+                    </button>
+                    <button type="button" onclick="saveCourse()" class="btn-primary">
+                        Guardar Curso
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    styleModal(modal);
+    document.body.appendChild(modal);
+}
+
+// Verificar conflictos del curso manual
+function checkCourseConflicts() {
+    const day = document.getElementById('courseDay').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const courseName = document.getElementById('courseName').value;
+    
+    if (!day || !startTime || !endTime) {
+        showAlert('Por favor completa día y horarios', 'warning');
+        return;
+    }
+    
+    // Crear horario simulado para verificar
+    const timeSlot = `${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`;
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    const hasConflict = hasConflictWithActivities(day, timeSlot);
+    const conflictCheck = document.getElementById('conflictCheck');
+    const conflictMessage = document.getElementById('conflictMessage');
+    
+    if (hasConflict) {
+        const conflicts = getConflictDetails(day, timeSlot, externalActivities);
+        conflictMessage.textContent = `Conflicto con: ${conflicts.map(c => c.activityName).join(', ')}`;
+        conflictCheck.style.display = 'block';
+        conflictCheck.className = 'conflict-check conflict-found';
+    } else {
+        conflictMessage.textContent = 'No se encontraron conflictos';
+        conflictCheck.style.display = 'block';
+        conflictCheck.className = 'conflict-check no-conflict';
+    }
+}
+
+// Convertir tiempo 24h a 12h
+function convertTo12Hour(time24) {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    return `${displayHour}:${minutes} ${period}`;
+}
+
+// Guardar curso manual
+function saveCourse() {
+    const courseName = document.getElementById('courseName').value;
+    const courseCode = document.getElementById('courseCode').value;
+    const day = document.getElementById('courseDay').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const room = document.getElementById('courseRoom').value;
+    const credits = parseInt(document.getElementById('courseCredits').value);
+    const category = document.getElementById('courseCategory').value;
+    
+    if (!courseName || !day || !startTime || !endTime) {
+        showAlert('Por favor completa todos los campos obligatorios', 'error');
+        return;
+    }
+    
+    const newCourse = {
+        name: courseName,
+        code: courseCode || 'MAN-' + Date.now(),
+        day: day,
+        time: `${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`,
+        room: room || 'Por asignar',
+        credits: credits,
+        category: category,
+        isManual: true,
+        addedAt: new Date().toISOString()
+    };
+    
+    // Agregar a materias seleccionadas
+    let selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    selectedSubjects.push(newCourse);
+    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
+    
+    // Actualizar vista
+    loadSelectedSubjects();
+    showPreferencesInfo();
+    
+    // Cerrar modal
+    document.querySelector('.modal-overlay').remove();
+    
+    showAlert(`Curso "${courseName}" agregado exitosamente`, 'success');
 }
 
 // Navegación entre horarios
@@ -538,9 +1349,18 @@ function optimizeSchedule() {
 
 // Cargar materias seleccionadas mejorado
 function loadSelectedSubjects() {
-    selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    console.log('🔄 === CARGANDO MATERIAS SELECCIONADAS ===');
+    
+    // Obtener datos de localStorage
+    const storedSubjects = localStorage.getItem('selectedSubjects');
+    console.log('📦 Datos en localStorage:', storedSubjects);
+    
+    selectedSubjects = JSON.parse(storedSubjects) || [];
+    console.log('📚 Materias parseadas:', selectedSubjects);
+    console.log('📊 Cantidad de materias:', selectedSubjects.length);
     
     if (selectedSubjects.length === 0) {
+        console.warn('⚠️ No se encontraron materias seleccionadas');
         showAlert('❌ No has seleccionado materias. Ve a "Gestión de Materias" para seleccionar materias primero.', 'warning');
         
         // Deshabilitar botón de generar
@@ -552,10 +1372,125 @@ function loadSelectedSubjects() {
         return;
     }
     
+    console.log('✅ Materias cargadas exitosamente');
+    
     // Mostrar materias seleccionadas
     showSelectedSubjectsInfo();
     
     console.log('Materias seleccionadas:', selectedSubjects);
+}
+
+// Función para cargar datos de prueba (temporal para debugging)
+function loadTestData() {
+    console.log('🧪 Cargando datos de prueba...');
+    
+    // Datos de prueba - materias
+    const testSubjects = [
+        {
+            id: 'algebra',
+            name: 'Álgebra Lineal',
+            credits: 3,
+            code: 'MAT200',
+            category: 'matematicas'
+        },
+        {
+            id: 'programacion',
+            name: 'Programación Avanzada',
+            credits: 4,
+            code: 'CS204',
+            category: 'programacion'
+        },
+        {
+            id: 'basedatos',
+            name: 'Base de Datos',
+            credits: 3,
+            code: 'CS301',
+            category: 'programacion'
+        }
+    ];
+    
+    // Datos de prueba - preferencias
+    const testPreferences = {
+        availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        preferredTime: 'morning',
+        studyStyle: 'concentrated',
+        breakTime: 15
+    };
+    
+    // Datos de prueba - actividades externas
+    const testActivities = [
+        {
+            name: 'Gimnasio',
+            day: 'Monday',
+            timeStart: '6:00 PM',
+            timeEnd: '8:00 PM'
+        }
+    ];
+    
+    // Guardar en localStorage
+    localStorage.setItem('selectedSubjects', JSON.stringify(testSubjects));
+    localStorage.setItem('userPreferences', JSON.stringify(testPreferences));
+    localStorage.setItem('externalActivities', JSON.stringify(testActivities));
+    
+    console.log('✅ Datos de prueba cargados exitosamente');
+    
+    // Recargar la página para aplicar los cambios
+    location.reload();
+}
+
+// Mostrar información de materias seleccionadas
+function showSelectedSubjectsInfo() {
+    const scheduleGenerator = document.querySelector('.schedule-generator');
+    
+    // Remover panel existente si existe
+    const existingPanel = document.querySelector('.selected-subjects-panel');
+    if (existingPanel) {
+        existingPanel.remove();
+    }
+    
+    // Crear panel de información
+    const infoPanel = document.createElement('div');
+    infoPanel.className = 'selected-subjects-panel';
+    infoPanel.innerHTML = `
+        <div class="panel-header">
+            <h3><i class="fas fa-books"></i> Materias Seleccionadas (${selectedSubjects.length})</h3>
+            <p>Estas materias se usarán para generar tu horario</p>
+        </div>
+        <div class="subjects-list">
+            ${selectedSubjects.map(subject => `
+                <div class="subject-item">
+                    <span class="subject-name">${subject.name || subject}</span>
+                    <span class="subject-credits">${subject.credits || 3} créditos</span>
+                </div>
+            `).join('')}
+        </div>
+        <div class="panel-actions">
+            <button onclick="window.location.href='subjects.html'" class="btn-secondary">
+                <i class="fas fa-edit"></i> Editar Materias
+            </button>
+        </div>
+    `;
+    
+    // Insertar después del header
+    const contentHeader = scheduleGenerator.querySelector('.content-header');
+    if (contentHeader) {
+        contentHeader.insertAdjacentElement('afterend', infoPanel);
+    }
+}
+
+// Mostrar información de preferencias
+function showUserPreferencesInfo() {
+    const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    
+    if (!preferences.availableDays || preferences.availableDays.length === 0) {
+        showAlert('⚠️ No has configurado tus preferencias. Ve a "Preferencias" para configurar días y horarios disponibles.', 'warning');
+    } else {
+        console.log('✅ Preferencias configuradas:', {
+            diasDisponibles: preferences.availableDays,
+            horariosBloquados: preferences.blockedTimes?.length || 0,
+            actividadesExternas: preferences.externalActivities?.length || 0
+        });
+    }
 }
 
 // Mostrar información de materias seleccionadas
@@ -1031,3 +1966,47 @@ document.addEventListener('DOMContentLoaded', function() {
     // Hacer el horario interactivo después de un breve delay
     setTimeout(makeScheduleInteractive, 1000);
 });
+
+// Mostrar información de preferencias
+function showPreferencesInfo() {
+    const infoPanel = document.getElementById('preferencesInfo');
+    if (!infoPanel) return;
+    
+    const userPrefs = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    const subjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    
+    // Actualizar información
+    document.getElementById('selectedSubjectsCount').textContent = subjects.length;
+    
+    const preferredTime = userPrefs.preferredTime || 'No configurado';
+    const timeLabels = {
+        'morning': 'Matutino (7AM - 12PM)',
+        'afternoon': 'Vespertino (12PM - 6PM)', 
+        'evening': 'Nocturno (6PM - 9PM)',
+        'flexible': 'Flexible'
+    };
+    document.getElementById('preferredTimeInfo').textContent = timeLabels[preferredTime] || preferredTime;
+    
+    const availableDays = userPrefs.availableDays || [];
+    const dayLabels = {
+        'Monday': 'Lun',
+        'Tuesday': 'Mar', 
+        'Wednesday': 'Mié',
+        'Thursday': 'Jue',
+        'Friday': 'Vie',
+        'Saturday': 'Sáb',
+        'Sunday': 'Dom'
+    };
+    const daysText = availableDays.length > 0 
+        ? availableDays.map(day => dayLabels[day] || day).join(', ')
+        : 'Todos los días';
+    document.getElementById('availableDaysInfo').textContent = daysText;
+    
+    document.getElementById('externalActivitiesCount').textContent = externalActivities.length;
+    
+    // Mostrar panel si hay datos configurados
+    if (subjects.length > 0 || Object.keys(userPrefs).length > 0 || externalActivities.length > 0) {
+        infoPanel.style.display = 'block';
+    }
+}

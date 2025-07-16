@@ -2438,3 +2438,48 @@ body {
     overflow-y: auto;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
+
+/* Estilos para actividades externas */
+.class-block.external {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad) !important;
+    color: white !important;
+    border: 2px solid #7d3c98;
+    position: relative;
+}
+
+.external-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #e74c3c;
+    color: white;
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.class-block.external .class-room {
+    font-style: italic;
+    opacity: 0.9;
+}
+
+/* Información adicional en el panel de preferencias */
+.preferences-info-panel .info-item.external-activities {
+    background: #f8f4ff;
+    border-left: 4px solid #9b59b6;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+.external-activities-count {
+    background: #9b59b6;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: bold;
+}

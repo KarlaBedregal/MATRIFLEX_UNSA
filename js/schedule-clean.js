@@ -9,6 +9,9 @@ let userPreferences = {};
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - inicializando generador de horarios');
     
+    // 🔄 Cargar datos frescos al inicializar
+    console.log('🔄 Cargando datos iniciales...');
+    
     // Cargar preferencias del usuario
     loadUserPreferences();
     
@@ -16,33 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSelectedSubjects();
     
     // Mostrar información de preferencias
-    showPreferencesInfo();
+    showSelectedSubjectsInfo();
     
-    // Mostrar información de preferencias
-    showUserPreferencesInfo();
-    
-    // Inicializar interfaz mejorada
-    initializeAdvancedInterface();
-});
-
-// Inicializar interfaz avanzada
-function initializeAdvancedInterface() {
-    console.log('Inicializando interfaz avanzada');
-    
-    // Añadir controles adicionales
-    const generateBtn = document.querySelector('.generate-btn');
-    if (generateBtn) {
-        generateBtn.innerHTML = `
-            <i class="fas fa-magic"></i> Generar Horarios Inteligentes
-        `;
-    }
-    
-    // Añadir panel de opciones de generación
+    // Agregar elementos dinámicos
     addGenerationOptions();
-    
-    // Añadir navegación entre horarios
     addScheduleNavigation();
-}
+    
+    console.log('✅ Inicialización completada');
+});
 
 // Añadir opciones de generación
 function addGenerationOptions() {
@@ -110,25 +94,59 @@ function addScheduleNavigation() {
 function generateSchedule() {
     console.log('=== INICIANDO GENERACION DE HORARIOS ===');
     
+    // 🔄 RECARGAR DATOS FRESCOS DEL LOCALSTORAGE
+    console.log('🔄 Recargando datos frescos del localStorage...');
+    
+    // Recargar materias seleccionadas
+    const freshSelectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    selectedSubjects = freshSelectedSubjects; // Actualizar variable global
+    
+    // Recargar preferencias
+    const freshUserPreferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    userPreferences = freshUserPreferences; // Actualizar variable global
+    
+    // Recargar actividades externas
+    const freshExternalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    console.log('📊 Datos frescos cargados:');
+    console.log('- Materias seleccionadas:', freshSelectedSubjects);
+    console.log('- Preferencias usuario:', freshUserPreferences);
+    console.log('- Actividades externas:', freshExternalActivities);
+    
     // Validar que hay materias seleccionadas
-    if (!selectedSubjects || selectedSubjects.length === 0) {
-        showAlert('❌ No hay materias seleccionadas. Ve a "Gestión de Materias" primero.', 'error');
+    if (!freshSelectedSubjects || freshSelectedSubjects.length === 0) {
+        console.warn('❌ No hay materias seleccionadas');
+        const userChoice = confirm(
+            '❌ No hay materias seleccionadas.\n\n' +
+            '¿Quieres ir a la página de Dashboard para seleccionar materias?\n\n' +
+            'Opciones:\n' +
+            '• OK = Ir a Dashboard\n' +
+            '• Cancelar = Cargar datos de prueba'
+        );
+        
+        if (userChoice) {
+            window.location.href = 'dashboard.html';
+        } else {
+            loadTestData();
+        }
         return;
     }
     
     // Validar que hay preferencias configuradas
-    if (!userPreferences || !userPreferences.availableDays || userPreferences.availableDays.length === 0) {
-        showAlert('❌ No has configurado tus preferencias. Ve a "Preferencias" primero.', 'error');
-        return;
+    if (!freshUserPreferences || Object.keys(freshUserPreferences).length === 0) {
+        showAlert('❌ No has configurado tus preferencias. Ve a "Preferencias" primero.', 'warning');
+        // Continuar con preferencias por defecto
+        userPreferences = {
+            availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            preferredTime: 'morning'
+        };
     }
     
     const generateBtn = document.querySelector('.generate-btn');
     generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
     generateBtn.disabled = true;
     
-    console.log('Datos para generacion:');
-    console.log('- Materias:', selectedSubjects);
-    console.log('- Preferencias:', userPreferences);
+    console.log('✅ Validación completada. Procediendo con la generación...');
     
     // Simular procesamiento
     setTimeout(() => {
@@ -144,16 +162,19 @@ function generateSchedule() {
 
 // Generar múltiples horarios
 function generateMultipleSchedules() {
-    console.log('Generando multiples horarios...');
+    console.log('=== GENERANDO MÚLTIPLES HORARIOS ===');
     
     generatedSchedules = [];
     
     const userPrefs = JSON.parse(localStorage.getItem('userPreferences')) || {};
     const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
     
-    console.log('Datos cargados:');
-    console.log('- Preferencias:', userPrefs);
+    console.log('📊 Datos cargados para generación:');
+    console.log('- Materias seleccionadas:', selectedSubjects);
+    console.log('- Preferencias usuario:', userPrefs);
     console.log('- Actividades externas:', externalActivities);
+    console.log('- Total materias:', selectedSubjects.length);
+    console.log('- Total actividades externas:', externalActivities.length);
     
     const availableDays = userPrefs.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     
@@ -175,6 +196,8 @@ function generateMultipleSchedules() {
     
     // Generar 3 horarios diferentes
     for (let i = 0; i < 3; i++) {
+        console.log(`\n🔄 Creando horario ${i + 1}:`);
+        
         const schedule = {
             name: `Horario ${i + 1}`,
             description: `Opción ${i + 1} optimizada`,
@@ -183,6 +206,8 @@ function generateMultipleSchedules() {
             conflictsWithActivities: 0
         };
         
+        // 1. Agregar materias seleccionadas
+        console.log(`📚 Agregando ${selectedSubjects.length} materias:`);
         selectedSubjects.forEach((subject, index) => {
             const dayIndex = (index + i) % availableDays.length;
             const timeIndex = (index + i) % timeSlots.length;
@@ -195,16 +220,60 @@ function generateMultipleSchedules() {
                 day: availableDays[dayIndex],
                 room: rooms[roomIndex],
                 color: colors[colorIndex],
-                credits: subject.credits || 3
+                credits: subject.credits || 3,
+                type: 'subject'
             };
             
             schedule.courses.push(course);
+            console.log(`  ✅ Materia agregada: ${course.name} (${course.day} ${course.time})`);
         });
         
+        // 2. Agregar actividades externas
+        if (externalActivities && externalActivities.length > 0) {
+            console.log(`🎯 Agregando ${externalActivities.length} actividades externas:`);
+            
+            externalActivities.forEach(activity => {
+                // Mapear días al formato en inglés si es necesario
+                const dayMap = {
+                    'lunes': 'Monday',
+                    'martes': 'Tuesday', 
+                    'miércoles': 'Wednesday',
+                    'jueves': 'Thursday',
+                    'viernes': 'Friday'
+                };
+                
+                const mappedDay = dayMap[activity.day] || activity.day;
+                
+                const externalCourse = {
+                    name: activity.name,
+                    time: activity.timeRange || `${activity.timeStart} - ${activity.timeEnd}`,
+                    day: mappedDay,
+                    room: 'Actividad Externa',
+                    color: 'external',
+                    type: 'external',
+                    isExternal: true
+                };
+                
+                schedule.courses.push(externalCourse);
+                console.log(`  🎯 Actividad externa agregada: ${externalCourse.name} (${externalCourse.day} ${externalCourse.time})`);
+            });
+        } else {
+            console.log('⚠️ No hay actividades externas para agregar');
+        }
+        
+        console.log(`📋 Horario ${i + 1} completado con ${schedule.courses.length} elementos totales`);
         generatedSchedules.push(schedule);
     }
     
-    console.log('Horarios generados:', generatedSchedules);
+    console.log('\n🎉 RESUMEN DE GENERACIÓN:');
+    console.log(`- Total horarios generados: ${generatedSchedules.length}`);
+    generatedSchedules.forEach((schedule, index) => {
+        const subjects = schedule.courses.filter(c => c.type === 'subject').length;
+        const externals = schedule.courses.filter(c => c.type === 'external').length;
+        const manuals = schedule.courses.filter(c => c.type === 'manual').length;
+        console.log(`  Horario ${index + 1}: ${subjects} materias + ${externals} actividades externas + ${manuals} manuales = ${schedule.courses.length} total`);
+    });
+    
     currentScheduleIndex = 0;
     updateScheduleNavigation();
 }
@@ -233,31 +302,49 @@ function clearScheduleGrid() {
 
 // Mostrar horario actual
 function displayCurrentSchedule() {
-    console.log('=== MOSTRANDO HORARIO ACTUAL ===');
+    console.log('\n=== MOSTRANDO HORARIO ACTUAL ===');
     
     if (generatedSchedules.length === 0) {
-        console.warn('No hay horarios generados');
+        console.warn('❌ No hay horarios generados');
+        showAlert('No hay horarios generados. Primero genera horarios.', 'warning');
         return;
     }
     
     const currentSchedule = generatedSchedules[currentScheduleIndex];
-    console.log('Horario actual:', currentSchedule);
+    console.log(`📋 Mostrando horario: ${currentSchedule.name}`);
+    console.log('📊 Contenido del horario:', currentSchedule);
     
-    // Actualizar título
+    // Analizar tipos de cursos
+    const subjects = currentSchedule.courses.filter(c => c.type === 'subject');
+    const externals = currentSchedule.courses.filter(c => c.type === 'external');
+    const manuals = currentSchedule.courses.filter(c => c.type === 'manual');
+    
+    console.log(`📚 Materias: ${subjects.length}`);
+    console.log(`🎯 Actividades externas: ${externals.length}`);
+    console.log(`✏️ Cursos manuales: ${manuals.length}`);
+    console.log(`📋 Total elementos: ${currentSchedule.courses.length}`);
+    
+    // Actualizar título con información detallada
     const sectionTitle = document.querySelector('#scheduleTitle');
     if (sectionTitle) {
-        sectionTitle.innerHTML = `${currentSchedule.name} - Calidad: ${currentSchedule.quality}%`;
+        sectionTitle.innerHTML = `
+            ${currentSchedule.name} - Calidad: ${currentSchedule.quality}% 
+            <span style="font-size: 14px; color: #666;">
+                (${subjects.length} materias, ${externals.length} actividades externas, ${manuals.length} manuales)
+            </span>
+        `;
     }
     
     // Limpiar grid
     clearScheduleGrid();
     
     if (!currentSchedule.courses || currentSchedule.courses.length === 0) {
-        console.warn('No hay cursos en el horario');
+        console.warn('⚠️ No hay cursos en el horario');
+        showAlert('El horario actual no tiene cursos. Verifica los datos.', 'warning');
         return;
     }
     
-    console.log(`Colocando ${currentSchedule.courses.length} cursos:`);
+    console.log(`\n🔄 Colocando ${currentSchedule.courses.length} elementos en el grid:`);
     
     let coursesPlaced = 0;
     currentSchedule.courses.forEach((course, index) => {
@@ -265,16 +352,32 @@ function displayCurrentSchedule() {
         
         const slot = findSlotForCourse(course);
         if (slot) {
+            // Determinar el estilo según el tipo de curso
+            let blockClass = course.color;
+            let extraContent = '';
+            
+            if (course.type === 'external' || course.isExternal) {
+                blockClass = 'external';
+                extraContent = '<span class="external-badge">🎯 Actividad Externa</span>';
+            } else if (course.type === 'manual') {
+                blockClass = 'manual';
+                extraContent = `<button onclick="removeManualCourse('${course.id}')" class="remove-btn">×</button>`;
+            }
+            
             slot.innerHTML = `
-                <div class="class-block ${course.color}">
+                <div class="class-block ${blockClass}">
                     <div class="class-name">${course.name}</div>
                     <div class="class-time">${course.time}</div>
                     <div class="class-room">${course.room}</div>
+                    ${extraContent}
                 </div>
             `;
             slot.classList.add('occupied');
             coursesPlaced++;
-            console.log(`✅ Curso colocado: ${course.name}`);
+            
+            const courseType = course.type === 'external' ? '🎯 Actividad Externa' : 
+                              course.type === 'manual' ? '✏️ Curso Manual' : '📚 Materia';
+            console.log(`✅ ${courseType} colocado: ${course.name}`);
         } else {
             console.error(`❌ No se pudo colocar: ${course.name}`);
         }
@@ -383,43 +486,245 @@ function updateScheduleNavigation() {
 
 // Cargar preferencias del usuario
 function loadUserPreferences() {
+    console.log('📋 Cargando preferencias del usuario...');
+    
+    // Cargar preferencias básicas
     userPreferences = JSON.parse(localStorage.getItem('userPreferences')) || {
         availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        preferredTime: 'morning'
+        preferredTime: 'morning',
+        blockedTimes: []
     };
-    console.log('Preferencias cargadas:', userPreferences);
+    
+    // Cargar actividades externas
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    console.log('🔍 Preferencias encontradas:', userPreferences);
+    console.log('🎯 Actividades externas encontradas:', externalActivities);
+    
+    // Convertir actividades externas al formato correcto
+    userPreferences.externalActivities = externalActivities.map(activity => {
+        // Mapear días al formato en inglés
+        const dayMap = {
+            'lunes': 'Monday',
+            'martes': 'Tuesday', 
+            'miércoles': 'Wednesday',
+            'jueves': 'Thursday',
+            'viernes': 'Friday'
+        };
+        
+        return {
+            id: activity.id || Math.random().toString(36).substr(2, 9),
+            name: activity.name,
+            day: dayMap[activity.day] || activity.day,
+            startTime: activity.timeStart || activity.start || '08:00',
+            endTime: activity.timeEnd || activity.end || '09:00',
+            timeRange: activity.timeRange,
+            type: 'external',
+            color: '#9b59b6' // Color púrpura para actividades externas
+        };
+    });
+    
+    console.log('✅ Preferencias procesadas:', userPreferences);
+    console.log('🔄 Actividades externas formateadas:', userPreferences.externalActivities);
 }
 
 // Cargar materias seleccionadas
+// Cargar materias seleccionadas
 function loadSelectedSubjects() {
-    console.log('Cargando materias seleccionadas...');
+    console.log('📚 Cargando materias seleccionadas...');
     
     const storedSubjects = localStorage.getItem('selectedSubjects');
-    console.log('Datos en localStorage:', storedSubjects);
+    console.log('📄 Datos raw en localStorage:', storedSubjects);
     
     selectedSubjects = JSON.parse(storedSubjects) || [];
-    console.log('Materias parseadas:', selectedSubjects);
+    console.log('📊 Materias parseadas:', selectedSubjects);
+    console.log(`📋 Total materias encontradas: ${selectedSubjects.length}`);
     
     if (selectedSubjects.length === 0) {
-        console.warn('No hay materias seleccionadas');
-        showAlert('❌ No has seleccionado materias. Ve a "Gestión de Materias" primero.', 'warning');
+        console.warn('⚠️ No hay materias seleccionadas en localStorage');
         
         const generateBtn = document.querySelector('.generate-btn');
         if (generateBtn) {
             generateBtn.disabled = true;
             generateBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Primero selecciona materias';
+            generateBtn.onclick = () => {
+                if (confirm('¿Ir a Dashboard para seleccionar materias?')) {
+                    window.location.href = 'dashboard.html';
+                }
+            };
         }
         return;
     }
     
     console.log('✅ Materias cargadas exitosamente');
+    selectedSubjects.forEach((subject, index) => {
+        console.log(`  ${index + 1}. ${subject.name || subject} (${subject.code || 'N/A'})`);
+    });
+    
+    // Activar botón de generar
+    const generateBtn = document.querySelector('.generate-btn');
+    if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generar Horarios Inteligentes';
+        generateBtn.onclick = generateSchedule;
+    }
+    
     showSelectedSubjectsInfo();
 }
 
 // Mostrar información de materias seleccionadas
+// Mostrar información de materias seleccionadas
 function showSelectedSubjectsInfo() {
-    console.log('Mostrando info de materias seleccionadas');
-    // Función placeholder
+    console.log('📋 Mostrando información de materias y preferencias...');
+    
+    const preferencesPanel = document.getElementById('preferencesInfo');
+    if (!preferencesPanel) return;
+    
+    // Mostrar el panel
+    preferencesPanel.style.display = 'block';
+    
+    // Obtener datos actuales
+    const subjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    // Actualizar contadores
+    const selectedSubjectsCount = document.getElementById('selectedSubjectsCount');
+    if (selectedSubjectsCount) {
+        selectedSubjectsCount.textContent = subjects.length;
+    }
+    
+    const externalActivitiesCount = document.getElementById('externalActivitiesCount');
+    if (externalActivitiesCount) {
+        externalActivitiesCount.innerHTML = `
+            <span class="external-activities-count">${externalActivities.length}</span>
+            ${externalActivities.length > 0 ? externalActivities.map(a => a.name).join(', ') : 'Ninguna'}
+        `;
+    }
+    
+    const preferredTimeInfo = document.getElementById('preferredTimeInfo');
+    if (preferredTimeInfo) {
+        const timeText = preferences.preferredTime === 'morning' ? 'Matutino' : 
+                        preferences.preferredTime === 'afternoon' ? 'Vespertino' : 'Flexible';
+        preferredTimeInfo.textContent = timeText;
+    }
+    
+    const availableDaysInfo = document.getElementById('availableDaysInfo');
+    if (availableDaysInfo) {
+        const dayMap = {
+            'Monday': 'Lun',
+            'Tuesday': 'Mar', 
+            'Wednesday': 'Mié',
+            'Thursday': 'Jue',
+            'Friday': 'Vie'
+        };
+        const availableDays = preferences.availableDays || [];
+        const dayNames = availableDays.map(day => dayMap[day] || day).join(', ');
+        availableDaysInfo.textContent = dayNames || 'Todos';
+    }
+    
+    console.log('✅ Panel de información actualizado');
+}
+
+// Función para verificar qué datos están almacenados
+function checkStoredData() {
+    console.log('🔍 VERIFICANDO DATOS ALMACENADOS...');
+    
+    const subjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
+    const preferences = JSON.parse(localStorage.getItem('userPreferences')) || {};
+    const externalActivities = JSON.parse(localStorage.getItem('externalActivities')) || [];
+    
+    console.log('📊 DATOS ACTUALES EN LOCALSTORAGE:');
+    console.log('1. Materias seleccionadas:', subjects);
+    console.log('2. Preferencias usuario:', preferences);
+    console.log('3. Actividades externas:', externalActivities);
+    
+    // Crear resumen para mostrar al usuario
+    let summary = `📊 RESUMEN DE TUS DATOS ALMACENADOS:\n\n`;
+    
+    summary += `📚 MATERIAS SELECCIONADAS (${subjects.length}):\n`;
+    if (subjects.length > 0) {
+        subjects.forEach((subject, index) => {
+            summary += `   ${index + 1}. ${subject.name || subject} (${subject.credits || 'N/A'} créditos)\n`;
+        });
+    } else {
+        summary += `   ❌ No hay materias seleccionadas\n`;
+    }
+    
+    summary += `\n🎯 ACTIVIDADES EXTERNAS (${externalActivities.length}):\n`;
+    if (externalActivities.length > 0) {
+        externalActivities.forEach((activity, index) => {
+            summary += `   ${index + 1}. ${activity.name} - ${activity.day} (${activity.timeRange || activity.timeStart + '-' + activity.timeEnd})\n`;
+        });
+    } else {
+        summary += `   ❌ No hay actividades externas\n`;
+    }
+    
+    summary += `\n⚙️ PREFERENCIAS:\n`;
+    if (Object.keys(preferences).length > 0) {
+        summary += `   - Días disponibles: ${preferences.availableDays?.join(', ') || 'No configurado'}\n`;
+        summary += `   - Horario preferido: ${preferences.preferredTime || 'No configurado'}\n`;
+        summary += `   - Horarios bloqueados: ${preferences.blockedTimes?.length || 0}\n`;
+    } else {
+        summary += `   ❌ No hay preferencias configuradas\n`;
+    }
+    
+    // Mostrar en consola y alert
+    console.log(summary);
+    alert(summary);
+    
+    // Actualizar panel de información si existe
+    showSelectedSubjectsInfo();
+    
+    return { subjects, preferences, externalActivities };
+}
+
+// Funciones de navegación rápida
+function goToSubjects() {
+    if (confirm('¿Ir a la página de gestión de materias para seleccionar materias?')) {
+        window.location.href = 'dashboard.html';
+    }
+}
+
+function goToPreferences() {
+    if (confirm('¿Ir a la página de preferencias para configurar horarios y actividades externas?')) {
+        window.location.href = 'preferences.html';
+    }
+}
+
+// Función para mostrar ayuda contextual
+function showScheduleHelp() {
+    const helpText = `
+🎓 AYUDA - GENERADOR DE HORARIOS
+
+Para usar el generador necesitas:
+
+1️⃣ MATERIAS SELECCIONADAS:
+   • Ve a "Dashboard" → selecciona materias de la lista
+   • Necesitas al menos 1 materia para generar horarios
+
+2️⃣ CONFIGURAR PREFERENCIAS (Opcional):
+   • Ve a "Preferences" → configura días disponibles
+   • Configura horarios preferidos
+   • Agrega actividades externas
+
+3️⃣ GENERAR HORARIOS:
+   • Vuelve aquí y click "Generar Horarios"
+   • Navega entre diferentes opciones
+   • Agrega cursos manuales si necesitas
+
+🔧 BOTONES ÚTILES:
+   • "Ver Datos Actuales" - revisa qué tienes guardado
+   • "Cargar Datos de Prueba" - datos de ejemplo para probar
+   • "Agregar Curso Manual" - añadir cursos personalizados
+
+❓ ¿Problemas?
+   • Revisa la consola del navegador (F12)
+   • Usa "Ver Datos Actuales" para diagnóstico
+    `;
+    
+    alert(helpText);
+    console.log(helpText);
 }
 
 // Mostrar información de preferencias
@@ -452,8 +757,30 @@ function loadTestData() {
     };
     
     const testActivities = [
-        { name: 'Gimnasio', day: 'Monday', timeStart: '6:00 PM', timeEnd: '8:00 PM' },
-        { name: 'Trabajo', day: 'Wednesday', timeStart: '2:00 PM', timeEnd: '5:00 PM' }
+        { 
+            id: 'gym1',
+            name: 'Gimnasio', 
+            day: 'lunes', 
+            timeStart: '6:00 PM', 
+            timeEnd: '8:00 PM',
+            timeRange: '6:00 PM - 8:00 PM'
+        },
+        { 
+            id: 'trabajo1',
+            name: 'Trabajo Medio Tiempo', 
+            day: 'miércoles', 
+            timeStart: '2:00 PM', 
+            timeEnd: '5:00 PM',
+            timeRange: '2:00 PM - 5:00 PM'
+        },
+        { 
+            id: 'idiomas1',
+            name: 'Clases de Inglés', 
+            day: 'viernes', 
+            timeStart: '4:00 PM', 
+            timeEnd: '6:00 PM',
+            timeRange: '4:00 PM - 6:00 PM'
+        }
     ];
     
     localStorage.setItem('selectedSubjects', JSON.stringify(testSubjects));

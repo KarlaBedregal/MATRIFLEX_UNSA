@@ -192,3 +192,36 @@ function logout() {
 
 // Ejecutar verificación de autenticación al cargar la página
 document.addEventListener('DOMContentLoaded', checkAuth);
+
+// Función para navegar al registro
+function goToRegister() {
+    window.location.href = 'register.html';
+}
+
+// Función para navegar al login
+function goToLogin() {
+    window.location.href = 'index.html';
+}
+
+// Agregar eventos adicionales de navegación
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar eventos a enlaces de navegación
+    const registerLinks = document.querySelectorAll('a[href="register.html"]');
+    const loginLinks = document.querySelectorAll('a[href="index.html"]');
+    
+    registerLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            goToRegister();
+        });
+    });
+    
+    loginLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (link.textContent.includes('Sign In') || link.textContent.includes('Iniciar')) {
+                e.preventDefault();
+                goToLogin();
+            }
+        });
+    });
+});

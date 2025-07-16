@@ -40,127 +40,131 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="schedule-generator">
-                <h2>Schedule Generator</h2>
-                <button class="btn-primary generate-btn" onclick="generateSchedule()">Generate Schedules</button>
-                
+                <div class="content-header">
+                    <h2><i class="fas fa-magic"></i> Generador de Horarios Inteligente</h2>
+                    <p>Utiliza IA para generar múltiples opciones de horario optimizadas según tus preferencias</p>
+                </div>
+
+                <!-- Opciones de generación se añadirán dinámicamente aquí -->
+
+                <div class="generation-controls">
+                    <button onclick="generateSchedule()" class="generate-btn">
+                        <i class="fas fa-magic"></i> Generar Horarios Inteligentes
+                    </button>
+                </div>
+
                 <div class="schedule-section">
-                    <h3>Select a proposed schedule</h3>
-                    
-                    <!-- Schedule Grid -->
-                    <div class="schedule-grid">
-                        <div class="schedule-header">
-                            <div class="time-column"></div>
-                            <div class="day-header">Monday</div>
-                            <div class="day-header">Tuesday</div>
-                            <div class="day-header">Thursday</div>
-                            <div class="day-header">Friday</div>
-                        </div>
+                    <!-- Navegación de horarios se añadirá dinámicamente aquí -->
+
+                    <div class="schedule-container">
+                        <h3 id="scheduleTitle">Horario Generado</h3>
                         
-                        <!-- Time slots -->
-                        <div class="time-slot">
-                            <div class="time-label">8 AM</div>
+                        <div class="schedule-grid">
+                            <!-- Headers de días -->
+                            <div class="day-header">Hora</div>
+                            <div class="day-header">Lunes</div>
+                            <div class="day-header">Martes</div>
+                            <div class="day-header">Miércoles</div>
+                            <div class="day-header">Jueves</div>
+                            <div class="day-header">Viernes</div>
+
+                            <!-- Franjas horarias -->
+                            <div class="time-header">7:00 AM</div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">9 AM</div>
-                            <div class="slot">
-                                <div class="class-block math">
-                                    <div class="class-name">Math 201</div>
-                                    <div class="class-time">6:00 AM - 9:50 AM</div>
-                                </div>
-                            </div>
                             <div class="slot"></div>
-                            <div class="slot"></div>
-                            <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">10 AM</div>
-                            <div class="slot"></div>
-                            <div class="slot"></div>
-                            <div class="slot">
-                                <div class="class-block history">
-                                    <div class="class-name">History 101</div>
-                                    <div class="class-time">10:00 A - 11:15 AM</div>
-                                </div>
-                            </div>
-                            <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">11 AM</div>
+
+                            <div class="time-header">8:00 AM</div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">12 PM</div>
                             <div class="slot"></div>
-                            <div class="slot">
-                                <div class="class-block chemistry">
-                                    <div class="class-name">Chemistry 202</div>
-                                    <div class="class-time">11:00 A - 11:50 AM</div>
-                                </div>
-                            </div>
-                            <div class="slot"></div>
-                            <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">1 PM</div>
+
+                            <div class="time-header">9:00 AM</div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">2 PM</div>
                             <div class="slot"></div>
-                            <div class="slot"></div>
-                            <div class="slot"></div>
-                            <div class="slot">
-                                <div class="class-block comp-sci">
-                                    <div class="class-name">Comp Sess 150</div>
-                                    <div class="class-time">1:00 P - 2:15 PM</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">3 PM</div>
+
+                            <div class="time-header">10:00 AM</div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">4 PM</div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">11:00 AM</div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
-                        </div>
-                        
-                        <div class="time-slot">
-                            <div class="time-label">5 PM</div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">12:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">1:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">2:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">3:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">4:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">5:00 PM</div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+                            <div class="slot"></div>
+
+                            <div class="time-header">6:00 PM</div>
+                            <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                             <div class="slot"></div>
                         </div>
-                    </div>
-                    
-                    <div class="schedule-actions">
-                        <button class="btn-primary" onclick="chooseSchedule()">Choose</button>
-                        <button class="btn-secondary" onclick="editManually()">Edit Manually</button>
+
+                        <div class="schedule-actions">
+                            <button onclick="saveSchedule()" class="save-btn">
+                                <i class="fas fa-save"></i> Guardar Horario
+                            </button>
+                            <button onclick="exportSchedule()" class="export-btn">
+                                <i class="fas fa-download"></i> Exportar PDF
+                            </button>
+                            <button onclick="printSchedule()" class="print-btn">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,13 +1,16 @@
 # MatriFlex UNSA - Netlify Configuration
 
+# Configuración de build
+[build]
+  publish = "."
+  command = ""
+
+# Redirects para SPA behavior
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
   force = false
-
-[build]
-  publish = "."
   
 [build.environment]
   NODE_VERSION = "18"

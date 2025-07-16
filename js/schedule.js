@@ -237,69 +237,116 @@ function updateProgress(step, percentage, text) {
     if (progressText) progressText.textContent = text;
 }
 
-// Generar múltiples horarios
+// Generar múltiples horarios usando materias reales
 function generateMultipleSchedules() {
     generatedSchedules = [];
     
-    // Simular generación de 5 horarios diferentes
-    const scheduleTemplates = [
-        {
-            name: 'Horario Matutino Optimizado',
-            quality: 92,
-            courses: [
-                { name: 'Cálculo Diferencial', time: '7:00 AM - 8:30 AM', day: 'Monday', room: 'A101', color: 'math' },
-                { name: 'Programación OOP', time: '9:00 AM - 10:30 AM', day: 'Monday', room: 'Lab B', color: 'comp-sci' },
-                { name: 'Base de Datos', time: '7:00 AM - 8:30 AM', day: 'Wednesday', room: 'A205', color: 'comp-sci' },
-                { name: 'Inglés Técnico', time: '10:00 AM - 11:00 AM', day: 'Friday', room: 'C101', color: 'language' }
-            ]
-        },
-        {
-            name: 'Horario Distribuido',
-            quality: 88,
-            courses: [
-                { name: 'Cálculo Diferencial', time: '2:00 PM - 3:30 PM', day: 'Tuesday', room: 'A101', color: 'math' },
-                { name: 'Programación OOP', time: '4:00 PM - 5:30 PM', day: 'Tuesday', room: 'Lab B', color: 'comp-sci' },
-                { name: 'Base de Datos', time: '10:00 AM - 11:30 AM', day: 'Thursday', room: 'A205', color: 'comp-sci' },
-                { name: 'Inglés Técnico', time: '3:00 PM - 4:00 PM', day: 'Friday', room: 'C101', color: 'language' }
-            ]
-        },
-        {
-            name: 'Horario Compacto',
-            quality: 85,
-            courses: [
-                { name: 'Cálculo Diferencial', time: '8:00 AM - 9:30 AM', day: 'Monday', room: 'A101', color: 'math' },
-                { name: 'Programación OOP', time: '10:00 AM - 11:30 AM', day: 'Monday', room: 'Lab B', color: 'comp-sci' },
-                { name: 'Base de Datos', time: '1:00 PM - 2:30 PM', day: 'Monday', room: 'A205', color: 'comp-sci' },
-                { name: 'Inglés Técnico', time: '8:00 AM - 9:00 AM', day: 'Wednesday', room: 'C101', color: 'language' }
-            ]
-        },
-        {
-            name: 'Horario Vespertino',
-            quality: 79,
-            courses: [
-                { name: 'Cálculo Diferencial', time: '2:00 PM - 3:30 PM', day: 'Monday', room: 'A101', color: 'math' },
-                { name: 'Programación OOP', time: '4:00 PM - 5:30 PM', day: 'Wednesday', room: 'Lab B', color: 'comp-sci' },
-                { name: 'Base de Datos', time: '6:00 PM - 7:30 PM', day: 'Wednesday', room: 'A205', color: 'comp-sci' },
-                { name: 'Inglés Técnico', time: '3:00 PM - 4:00 PM', day: 'Friday', room: 'C101', color: 'language' }
-            ]
-        },
-        {
-            name: 'Horario Balanceado',
-            quality: 95,
-            courses: [
-                { name: 'Cálculo Diferencial', time: '9:00 AM - 10:30 AM', day: 'Tuesday', room: 'A101', color: 'math' },
-                { name: 'Programación OOP', time: '11:00 AM - 12:30 PM', day: 'Thursday', room: 'Lab B', color: 'comp-sci' },
-                { name: 'Base de Datos', time: '8:00 AM - 9:30 AM', day: 'Friday', room: 'A205', color: 'comp-sci' },
-                { name: 'Inglés Técnico', time: '2:00 PM - 3:00 PM', day: 'Wednesday', room: 'C101', color: 'language' }
-            ]
-        }
+    if (selectedSubjects.length === 0) {
+        showAlert('No hay materias seleccionadas para generar horarios', 'error');
+        return;
+    }
+    
+    // Configurar horarios disponibles
+    const timeSlots = [
+        '7:00 AM - 8:30 AM', '8:00 AM - 9:30 AM', '9:00 AM - 10:30 AM', 
+        '10:00 AM - 11:30 AM', '11:00 AM - 12:30 PM', '12:00 PM - 1:30 PM',
+        '1:00 PM - 2:30 PM', '2:00 PM - 3:30 PM', '3:00 PM - 4:30 PM',
+        '4:00 PM - 5:30 PM', '5:00 PM - 6:30 PM', '6:00 PM - 7:30 PM'
     ];
     
-    generatedSchedules = scheduleTemplates;
-    currentScheduleIndex = 0;
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const rooms = ['A101', 'A205', 'Lab B', 'Lab C', 'C101', 'C205', 'D101'];
     
-    // Actualizar interfaz
+    // Generar 5 horarios diferentes
+    for (let i = 0; i < 5; i++) {
+        const schedule = {
+            name: getScheduleName(i),
+            quality: Math.floor(Math.random() * 25) + 75, // 75-100%
+            courses: []
+        };
+        
+        // Asignar cada materia seleccionada a un horario
+        selectedSubjects.forEach((subject, index) => {
+            const dayIndex = (index + i) % days.length;
+            const timeIndex = (index + i * 2) % timeSlots.length;
+            const roomIndex = (index + i) % rooms.length;
+            
+            schedule.courses.push({
+                name: subject.name,
+                time: timeSlots[timeIndex],
+                day: days[dayIndex],
+                room: rooms[roomIndex],
+                color: getCourseColor(subject.category || 'general'),
+                credits: subject.credits
+            });
+        });
+        
+        // Calcular calidad basada en distribución
+        schedule.quality = calculateScheduleQuality(schedule);
+        
+        generatedSchedules.push(schedule);
+    }
+    
+    // Ordenar por calidad (mejor primero)
+    generatedSchedules.sort((a, b) => b.quality - a.quality);
+    
+    currentScheduleIndex = 0;
     updateScheduleNavigation();
+}
+
+// Obtener nombre descriptivo del horario
+function getScheduleName(index) {
+    const names = [
+        'Horario Optimizado',
+        'Horario Matutino',
+        'Horario Distribuido',
+        'Horario Compacto',
+        'Horario Vespertino'
+    ];
+    return names[index] || `Horario ${index + 1}`;
+}
+
+// Obtener color según categoría
+function getCourseColor(category) {
+    const colorMap = {
+        'matematicas': 'math',
+        'programacion': 'comp-sci',
+        'idiomas': 'language',
+        'ciencias': 'science',
+        'general': 'comp-sci'
+    };
+    return colorMap[category] || 'comp-sci';
+}
+
+// Calcular calidad del horario
+function calculateScheduleQuality(schedule) {
+    let quality = 80; // Base
+    
+    // Bonificación por distribución equilibrada
+    const dayDistribution = {};
+    schedule.courses.forEach(course => {
+        dayDistribution[course.day] = (dayDistribution[course.day] || 0) + 1;
+    });
+    
+    const maxCoursesPerDay = Math.max(...Object.values(dayDistribution));
+    if (maxCoursesPerDay <= 2) quality += 10;
+    else if (maxCoursesPerDay <= 3) quality += 5;
+    
+    // Bonificación por horarios matutinos
+    const morningCourses = schedule.courses.filter(course => 
+        course.time.includes('AM') && !course.time.includes('11:') && !course.time.includes('12:')
+    ).length;
+    
+    if (morningCourses >= schedule.courses.length * 0.7) quality += 10;
+    
+    // Penalización por horarios muy tardíos
+    const lateCourses = schedule.courses.filter(course => 
+        course.time.includes('6:00 PM') || course.time.includes('7:00 PM')
+    ).length;
+    
+    quality -= lateCourses * 5;
+    
+    return Math.min(100, Math.max(60, quality));
 }
 
 // Mostrar horario generado mejorado
@@ -494,11 +541,53 @@ function loadSelectedSubjects() {
     selectedSubjects = JSON.parse(localStorage.getItem('selectedSubjects')) || [];
     
     if (selectedSubjects.length === 0) {
-        showAlert('No has seleccionado materias. Ve al dashboard para seleccionar materias.', 'warning');
+        showAlert('❌ No has seleccionado materias. Ve a "Gestión de Materias" para seleccionar materias primero.', 'warning');
+        
+        // Deshabilitar botón de generar
+        const generateBtn = document.querySelector('.generate-btn');
+        if (generateBtn) {
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Primero selecciona materias';
+        }
         return;
     }
     
+    // Mostrar materias seleccionadas
+    showSelectedSubjectsInfo();
+    
     console.log('Materias seleccionadas:', selectedSubjects);
+}
+
+// Mostrar información de materias seleccionadas
+function showSelectedSubjectsInfo() {
+    const generateBtn = document.querySelector('.generate-btn');
+    if (generateBtn && selectedSubjects.length > 0) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = `<i class="fas fa-magic"></i> Generar Horarios para ${selectedSubjects.length} materias`;
+    }
+    
+    // Crear panel informativo
+    const scheduleGenerator = document.querySelector('.schedule-generator');
+    let infoPanel = document.querySelector('.subjects-info-panel');
+    
+    if (!infoPanel) {
+        infoPanel = document.createElement('div');
+        infoPanel.className = 'subjects-info-panel';
+        infoPanel.innerHTML = `
+            <h3><i class="fas fa-books"></i> Materias seleccionadas</h3>
+            <div class="subjects-list"></div>
+        `;
+        scheduleGenerator.insertBefore(infoPanel, scheduleGenerator.querySelector('.generation-controls'));
+    }
+    
+    const subjectsList = infoPanel.querySelector('.subjects-list');
+    subjectsList.innerHTML = selectedSubjects.map(subject => `
+        <div class="subject-item">
+            <span class="subject-name">${subject.name}</span>
+            <span class="subject-code">${subject.code}</span>
+            <span class="subject-credits">${subject.credits} créditos</span>
+        </div>
+    `).join('');
 }
 
 // Cargar preferencias del usuario mejorado

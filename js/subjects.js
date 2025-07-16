@@ -9,7 +9,169 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar materias ya seleccionadas
     loadSelectedSubjects();
+    
+    // Configurar botón de guardar
+    setupSaveButton();
 });
+
+// Configurar botón de guardar
+function setupSaveButton() {
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSelectedSubjects);
+    }
+}
+
+// Guardar materias seleccionadas
+function saveSelectedSubjects() {
+    const selectedCheckboxes = document.querySelectorAll('.subject-checkbox:checked');
+    const selectedSubjects = Array.from(selectedCheckboxes).map(checkbox => {
+        const card = checkbox.closest('.subject-card');
+        return {
+            id: checkbox.value,
+            name: card.querySelector('h3').textContent,
+            code: card.querySelector('.subject-code').textContent,
+            credits: parseInt(card.querySelector('.subject-credits').textContent),
+            category: card.dataset.category || 'general'
+        };
+    });
+    
+    // Guardar en localStorage
+    localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
+    
+    // Mostrar mensaje de confirmación
+    showAlert(`¡Se guardaron ${selectedSubjects.length} materias seleccionadas!`, 'success');
+    
+    // Actualizar contador en la interfaz
+    updateSelectedCount();
+    
+    console.log('Materias guardadas:', selectedSubjects);
+}
+
+// Actualizar contador de materias seleccionadas
+function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.subject-checkbox:checked');
+    const countElement = document.querySelector('.selected-count');
+    
+    if (countElement) {
+        countElement.textContent = `${selectedCheckboxes.length} materias seleccionadas`;
+    }
+    
+    // Actualizar también en el botón de guardar
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        if (selectedCheckboxes.length > 0) {
+            saveBtn.textContent = `Guardar ${selectedCheckboxes.length} materias`;
+            saveBtn.disabled = false;
+        } else {
+            saveBtn.textContent = 'Selecciona materias primero';
+            saveBtn.disabled = true;
+        }
+    }
+}
+
+// Configurar eventos de checkbox mejorado
+function setupCheckboxEvents() {
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('subject-checkbox')) {
+            updateSelectedCount();
+            
+            // Añadir efecto visual al card
+            const card = e.target.closest('.subject-card');
+            if (e.target.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        }
+    });
+}
+
+// Función de alerta mejorada
+function showAlert(message, type = 'info') {
+    // Crear o encontrar el contenedor de alertas
+    let alertContainer = document.querySelector('.alert-container');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.className = 'alert-container';
+        alertContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
+        document.body.appendChild(alertContainer);
+    }
+    
+    // Crear la alerta
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    
+    const colors = {
+        success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+        warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+        error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
+        info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    alert.style.cssText = `
+        background-color: ${color.bg};
+        border: 1px solid ${color.border};
+        color: ${color.text};
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 250px;
+        max-width: 400px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+    
+    const icons = {
+        success: '✓',
+        warning: '⚠',
+        error: '✗',
+        info: 'ℹ'
+    };
+    
+    alert.innerHTML = `
+        <span style="font-size: 16px; font-weight: bold;">${icons[type] || icons.info}</span>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none; 
+            border: none; 
+            font-size: 18px; 
+            cursor: pointer; 
+            margin-left: auto;
+            color: ${color.text};
+            opacity: 0.7;
+        ">×</button>
+    `;
+    
+    alertContainer.appendChild(alert);
+    
+    // Animar entrada
+    setTimeout(() => {
+        alert.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.style.transform = 'translateX(100%)';
+            setTimeout(() => alert.remove(), 300);
+        }
+    }, 5000);
+}
 
 // Cargar materias disponibles
 function loadAvailableSubjects() {

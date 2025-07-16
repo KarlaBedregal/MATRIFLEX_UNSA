@@ -103,6 +103,18 @@ function setupEventListeners() {
     activityInputs.forEach(input => {
         input.addEventListener('change', updatePreferences);
     });
+    
+    // Botón de guardar preferencias
+    const saveBtn = document.querySelector('.save-preferences-btn, .btn-primary');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', savePreferences);
+    }
+    
+    // Botón de agregar actividad externa
+    const addActivityBtn = document.querySelector('.add-activity-btn');
+    if (addActivityBtn) {
+        addActivityBtn.addEventListener('click', addExternalActivity);
+    }
 }
 
 // Actualizar preferencias
@@ -337,6 +349,103 @@ Estas preferencias fueron configuradas en MatriFlex UNSA
     
     // Crear y descargar archivo
     const blob = new Blob([preferencesText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mis-preferencias-horario.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showAlert('Preferencias exportadas como archivo de texto', 'success');
+}
+
+// Función de alerta (igual que en subjects.js)
+function showAlert(message, type = 'info') {
+    // Crear o encontrar el contenedor de alertas
+    let alertContainer = document.querySelector('.alert-container');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.className = 'alert-container';
+        alertContainer.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        `;
+        document.body.appendChild(alertContainer);
+    }
+    
+    // Crear la alerta
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    
+    const colors = {
+        success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+        warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+        error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
+        info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    alert.style.cssText = `
+        background-color: ${color.bg};
+        border: 1px solid ${color.border};
+        color: ${color.text};
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 250px;
+        max-width: 400px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+    `;
+    
+    const icons = {
+        success: '✓',
+        warning: '⚠',
+        error: '✗',
+        info: 'ℹ'
+    };
+    
+    alert.innerHTML = `
+        <span style="font-size: 16px; font-weight: bold;">${icons[type] || icons.info}</span>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="
+            background: none; 
+            border: none; 
+            font-size: 18px; 
+            cursor: pointer; 
+            margin-left: auto;
+            color: ${color.text};
+            opacity: 0.7;
+        ">×</button>
+    `;
+    
+    alertContainer.appendChild(alert);
+    
+    // Animar entrada
+    setTimeout(() => {
+        alert.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.style.transform = 'translateX(100%)';
+            setTimeout(() => alert.remove(), 300);
+        }
+    }, 5000);
+}
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

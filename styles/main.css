@@ -1292,6 +1292,90 @@ body {
     border-left: 4px solid var(--blue-primary);
 }
 
+/* Panel de materias seleccionadas */
+.subjects-info-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--green-primary);
+}
+
+.subjects-info-panel h3 {
+    color: var(--green-primary);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.subjects-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+}
+
+.subject-item {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.subject-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.subject-name {
+    font-weight: 600;
+    color: var(--gray-primary);
+    flex: 1;
+}
+
+.subject-code {
+    background: var(--blue-primary);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    margin: 0 8px;
+}
+
+.subject-credits {
+    color: var(--gray-secondary);
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* Estilos para cards de materias seleccionadas */
+.subject-card.selected {
+    border-color: var(--green-primary);
+    background: linear-gradient(135deg, #f8fff8, #e8f5e8);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.2);
+}
+
+.subject-card.selected .subject-checkbox {
+    accent-color: var(--green-primary);
+}
+
+/* Contador de materias seleccionadas */
+.selected-count {
+    background: var(--green-primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
 .generation-options h3 {
     color: var(--blue-primary);
     margin-bottom: 20px;
